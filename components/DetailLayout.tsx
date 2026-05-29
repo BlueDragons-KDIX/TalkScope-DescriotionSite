@@ -8,6 +8,28 @@ type Props = {
   page: DetailPage;
 };
 
+// Module-level constants — avoid object recreation on every renderBlock call
+// (rendering-hoist-jsx / js-cache-function-results)
+const CALLOUT_STYLES = {
+  info: {
+    wrap: "border-indigo-500/25 bg-indigo-500/[0.07]",
+    text: "text-indigo-200",
+    icon: "text-indigo-400",
+  },
+  tip: {
+    wrap: "border-emerald-500/25 bg-emerald-500/[0.07]",
+    text: "text-emerald-200",
+    icon: "text-emerald-400",
+  },
+  warning: {
+    wrap: "border-amber-500/25 bg-amber-500/[0.07]",
+    text: "text-amber-200",
+    icon: "text-amber-400",
+  },
+} as const;
+
+const CALLOUT_ICONS = { info: "ℹ", tip: "✓", warning: "⚠" } as const;
+
 function renderBlock(block: ContentBlock, idx: number) {
   switch (block.type) {
     case "text":
@@ -69,32 +91,14 @@ function renderBlock(block: ContentBlock, idx: number) {
       );
 
     case "callout": {
-      const styles = {
-        info: {
-          wrap: "border-indigo-500/25 bg-indigo-500/[0.07]",
-          text: "text-indigo-200",
-          icon: "text-indigo-400",
-        },
-        tip: {
-          wrap: "border-emerald-500/25 bg-emerald-500/[0.07]",
-          text: "text-emerald-200",
-          icon: "text-emerald-400",
-        },
-        warning: {
-          wrap: "border-amber-500/25 bg-amber-500/[0.07]",
-          text: "text-amber-200",
-          icon: "text-amber-400",
-        },
-      };
-      const icons = { info: "ℹ", tip: "✓", warning: "⚠" };
-      const s = styles[block.variant];
+      const s = CALLOUT_STYLES[block.variant];
       return (
         <div
           key={idx}
           className={`flex gap-3 p-4 rounded-xl border my-6 ${s.wrap}`}
         >
           <span className={`text-base leading-none mt-0.5 ${s.icon}`}>
-            {icons[block.variant]}
+            {CALLOUT_ICONS[block.variant]}
           </span>
           <p className={`text-sm leading-relaxed ${s.text}`}>
             {block.content}
