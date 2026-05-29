@@ -59,15 +59,6 @@ export const frontendItems: DigestItem[] = [
     category: "ux",
   },
   {
-    slug: "phase-system",
-    title: "フェーズシステム（発表中 / 発表後）",
-    description:
-      "「聴く」フェーズと「振り返る」フェーズを独立したシーンとして実装。IPhase インターフェース、フェーズ別レイアウトのロード、ピン中バブルのアーカイブ表示への切り替えを解説する。",
-    tags: ["フェーズ設計", "UX", "状態遷移"],
-    coverImage: { src: "/frontend/app-ranking.png", alt: "ランキング表示（発表後フェーズ）" },
-    category: "ux",
-  },
-  {
     slug: "customization",
     title: "高いカスタマイズ性",
     description:
@@ -92,7 +83,7 @@ export const frontendGroups: DigestGroup[] = [
     id: "ux",
     title: "UI / UX デザイン",
     description:
-      "会話中でも迷わず操作できる体験設計。自由なレイアウト・フェーズ体験・カスタマイズ性を解説する。",
+      "会話中でも迷わず操作できる体験設計。自由なレイアウトとカスタマイズ性を解説する。",
     icon: "🎨",
     items: frontendItems.filter((i) => i.category === "ux"),
   },

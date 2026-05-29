@@ -227,14 +227,14 @@ export default function HomePage() {
             <Link href="/frontend" data-accent="frontend" className="group card card-hover p-7">
               <div className="flex items-center justify-between mb-4">
                 <span className="tag-pill">Frontend</span>
-                <span className="font-mono text-xs text-zinc-600">6 articles</span>
+                <span className="font-mono text-xs text-zinc-600">5 articles</span>
               </div>
               <h3 className="font-semibold text-zinc-100 group-hover:text-accent transition-colors mb-2 text-lg">フロントエンド設計</h3>
               <p className="text-sm text-zinc-500 leading-relaxed mb-5">
-                システム設計（アーキテクチャ・物理エンジン・寿命管理）と UI/UX デザイン（レイアウト・フェーズ・カスタマイズ）の2分類で公開。
+                システム設計（アーキテクチャ・物理エンジン・寿命管理）と UI/UX デザイン（レイアウト・カスタマイズ）の2分類で公開。
               </p>
               <span className="inline-flex items-center gap-1 text-xs text-accent font-medium">
-                6本の記事を読む
+                5本の記事を読む
                 <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </span>
             </Link>

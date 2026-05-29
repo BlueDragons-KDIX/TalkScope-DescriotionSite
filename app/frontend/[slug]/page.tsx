@@ -9,7 +9,6 @@ const contentMap: Record<string, () => Promise<{ default: DetailPage }>> = {
   "bubble-physics":     () => import("@/content/frontend/bubble-physics"),
   "layout-engine":      () => import("@/content/frontend/layout-engine"),
   "bubble-lifetime":    () => import("@/content/frontend/bubble-lifetime"),
-  "phase-system":       () => import("@/content/frontend/phase-system"),
   "customization":      () => import("@/content/frontend/customization"),
 };
 
