@@ -128,20 +128,25 @@ export function renderBlock(block: ContentBlock, idx: number) {
       const cols = block.columns ?? (block.items.length === 2 ? 2 : 3);
       const grid = cols === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3";
       return (
-        <div key={idx} className={`my-7 grid grid-cols-1 ${grid} gap-3.5`}>
+        <div key={idx} className={`my-8 grid grid-cols-1 ${grid} gap-4`}>
           {block.items.map((c, i) => (
             <div
               key={i}
-              className="group relative card card-hover p-5 overflow-hidden"
+              className="group relative card card-hover p-6 overflow-hidden"
             >
               <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(var(--accent-rgb),0.6)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="flex items-center gap-2.5 mb-3">
+              {!c.icon && (
+                <span className="pointer-events-none absolute -top-5 -right-1 font-mono text-[5rem] font-bold leading-none text-white/[0.03] select-none tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              )}
+              <div className="relative flex items-center gap-3 mb-4">
                 {c.icon ? (
-                  <span className="flex-shrink-0 grid place-items-center w-9 h-9 rounded-xl bg-[rgba(var(--accent-rgb),0.1)] border border-[rgba(var(--accent-rgb),0.22)] text-lg leading-none">
+                  <span className="flex-shrink-0 grid place-items-center w-11 h-11 rounded-xl bg-[rgba(var(--accent-rgb),0.1)] border border-[rgba(var(--accent-rgb),0.22)] text-xl leading-none">
                     {c.icon}
                   </span>
                 ) : (
-                  <span className="flex-shrink-0 font-mono text-xl font-bold gradient-text leading-none tabular-nums">
+                  <span className="flex-shrink-0 font-mono text-3xl font-bold gradient-text leading-none tabular-nums">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                 )}
@@ -151,11 +156,11 @@ export function renderBlock(block: ContentBlock, idx: number) {
                   </span>
                 )}
               </div>
-              <h3 className="text-[0.95rem] font-semibold text-zinc-100 mb-1.5 leading-snug">
+              <h3 className="relative text-base font-bold text-zinc-50 mb-2 leading-snug tracking-tight">
                 {c.title}
               </h3>
               <p
-                className="text-sm text-zinc-400 leading-relaxed"
+                className="relative text-[0.92rem] text-zinc-400 leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: c.body }}
               />
             </div>
@@ -184,16 +189,16 @@ export function renderBlock(block: ContentBlock, idx: number) {
 
     case "steps":
       return (
-        <ol key={idx} className="my-7 relative">
-          <span className="absolute left-[15px] top-2 bottom-2 w-px bg-gradient-to-b from-[rgba(var(--accent-rgb),0.5)] via-white/10 to-transparent" />
+        <ol key={idx} className="my-8 relative">
+          <span className="absolute left-[19px] top-3 bottom-3 w-px bg-gradient-to-b from-[rgba(var(--accent-rgb),0.6)] via-white/10 to-transparent" />
           {block.items.map((step, i) => (
-            <li key={i} className="relative flex gap-4 pb-6 last:pb-0">
-              <span className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-ink-surface border border-[rgba(var(--accent-rgb),0.4)] text-accent font-mono text-sm font-semibold flex items-center justify-center">
+            <li key={i} className="relative flex gap-5 pb-7 last:pb-0">
+              <span className="relative z-10 flex-shrink-0 w-10 h-10 rounded-xl bg-ink-surface border border-[rgba(var(--accent-rgb),0.45)] text-accent font-mono text-base font-bold flex items-center justify-center shadow-[0_4px_16px_-6px_rgba(var(--accent-rgb),0.6)] tabular-nums">
                 {i + 1}
               </span>
               <div className="pt-1 min-w-0">
-                <p className="text-sm font-semibold text-zinc-100 mb-1">{step.title}</p>
-                <p className="text-sm text-zinc-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: step.body }} />
+                <p className="text-[0.95rem] font-bold text-zinc-50 mb-1.5 tracking-tight">{step.title}</p>
+                <p className="text-[0.92rem] text-zinc-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: step.body }} />
               </div>
             </li>
           ))}
