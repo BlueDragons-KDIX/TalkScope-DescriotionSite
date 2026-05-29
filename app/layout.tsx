@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import FloatingAppBubble from "@/components/FloatingAppBubble";
 
 export const metadata: Metadata = {
   title: {
@@ -40,6 +41,7 @@ export default function RootLayout({
         <Nav />
         <main className="pt-14">{children}</main>
         <Footer />
+        <FloatingAppBubble />
       </body>
     </html>
   );

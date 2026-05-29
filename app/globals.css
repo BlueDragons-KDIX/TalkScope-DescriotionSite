@@ -9,12 +9,12 @@
     --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", "Roboto Mono",
       ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-    --bg: #05060c;
-    --bg-deep: #04040a;
-    --surface: #0a0b14;
-    --surface-raised: #10111d;
-    --border: rgba(255, 255, 255, 0.07);
-    --border-strong: rgba(255, 255, 255, 0.12);
+    --bg: #0e1019;
+    --bg-deep: #0a0c14;
+    --surface: #141722;
+    --surface-raised: #1a1e2b;
+    --border: rgba(255, 255, 255, 0.09);
+    --border-strong: rgba(255, 255, 255, 0.15);
     --text-primary: #eef0f8;
     --text-secondary: #9698ad;
     --text-muted: #5a5c72;
@@ -58,8 +58,9 @@
     font-family: var(--font-sans);
     background-color: var(--bg);
     background-image:
-      radial-gradient(ellipse 90% 55% at 50% -8%, rgba(var(--accent-rgb), 0.10), transparent),
-      radial-gradient(ellipse 70% 50% at 85% 5%, rgba(var(--accent-2-rgb), 0.05), transparent);
+      radial-gradient(ellipse 90% 55% at 50% -8%, rgba(var(--accent-rgb), 0.14), transparent),
+      radial-gradient(ellipse 70% 50% at 85% 5%, rgba(var(--accent-2-rgb), 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 10% 90%, rgba(var(--accent-rgb), 0.05), transparent);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
