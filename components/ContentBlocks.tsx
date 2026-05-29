@@ -12,9 +12,9 @@ export function renderBlock(block: ContentBlock, idx: number) {
   switch (block.type) {
     case "lead":
       return (
-        <p
+        <div
           key={idx}
-          className="text-lg sm:text-xl leading-[1.7] text-zinc-200 font-light mb-7 text-pretty"
+          className="surface-panel px-5 py-4 text-lg sm:text-xl leading-[1.7] text-zinc-200 font-light mb-7 text-pretty"
           dangerouslySetInnerHTML={{ __html: block.content }}
         />
       );
@@ -196,9 +196,9 @@ export function renderBlock(block: ContentBlock, idx: number) {
               <span className="relative z-10 flex-shrink-0 w-10 h-10 rounded-xl bg-ink-surface border border-[rgba(var(--accent-rgb),0.45)] text-accent font-mono text-base font-bold flex items-center justify-center shadow-[0_4px_16px_-6px_rgba(var(--accent-rgb),0.6)] tabular-nums">
                 {i + 1}
               </span>
-              <div className="pt-1 min-w-0">
+              <div className="pt-1 min-w-0 surface-panel px-4 py-3">
                 <p className="text-[0.95rem] font-bold text-zinc-50 mb-1.5 tracking-tight">{step.title}</p>
-                <p className="text-[0.92rem] text-zinc-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: step.body }} />
+                <p className="text-[0.92rem] text-zinc-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: step.body }} />
               </div>
             </li>
           ))}
