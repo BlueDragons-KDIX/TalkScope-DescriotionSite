@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import DigestLayout from "@/components/DigestLayout";
-import { backendDigest, backendItems } from "@/content/backend/index";
+import { backendDigest, backendItems, backendStack } from "@/content/backend/index";
 
 export const metadata: Metadata = {
   title: "バックエンド設計",
+  description: backendDigest.description,
 };
 
 export default function BackendPage() {
@@ -13,6 +14,7 @@ export default function BackendPage() {
       title={backendDigest.title}
       description={backendDigest.description}
       items={backendItems}
+      stack={backendStack}
     />
   );
 }
