@@ -4,146 +4,162 @@ const page: DetailPage = {
   slug: "clean-architecture",
   title: "クリーンアーキテクチャの採用",
   description:
-    "ハッカソンで一週間で作った神クラスを、実用に耐える設計へ段階的に再構築した。なぜクリーンアーキテクチャを選び、どう Zustand と組み合わせたか。",
-  tags: ["アーキテクチャ", "Zustand", "DI", "設計"],
+    "音声認識・物理演算・レイアウト・スコアリングが App.tsx に同居して肥大化していた。これを domain / application / infrastructure / presentation の4層へ段階的に分離し、スコアリング戦略を差し替え可能にした設計判断を解説する。",
+  intro:
+    "TalkScope のフロントエンドは、最初から綺麗だったわけではない。音声認識・物理演算・レイアウト・スコア計算が <code>App.tsx</code> に同居し、機能追加のたびに副作用が読めなくなっていった。そこで <strong>依存の向き</strong>を一方向に整え、UI を末端に追いやるリファクタリングを行った。",
+  tags: ["アーキテクチャ", "DDD", "Zustand", "Strategy パターン"],
   sections: [
     {
       id: "problem",
-      heading: "課題：神クラスと化した App.tsx",
+      heading: "出発点：肥大化した App.tsx",
       blocks: [
         {
-          type: "image",
-          image: {
-            src: "/app-base.png",
-            alt: "TalkScope ベース画面",
-            caption: "4つのウィンドウが並ぶ TalkScope のメイン画面",
-          },
+          type: "lead",
+          content:
+            "プロトタイプ期は速度がすべてだった。だが「重要語の出し方を試したい」「レイアウトを保存したい」と要求が増えるたび、一つのコンポーネントに状態とロジックが積み上がっていった。",
         },
         {
           type: "text",
-          content: `<p>ハッカソン期間中に一気に書いた最初の <code>App.tsx</code> は、音声認識・用語抽出・バブル管理・履歴・レイアウト——すべての状態とロジックを1ファイルに詰め込んだ <strong>神クラス</strong> だった。</p>
-<p>機能追加のたびに state の依存関係が増え、「どこを変えるとどこが壊れるか分からない」状態になりつつあった。テストも書けない。これはまずい。</p>`,
+          content:
+            "<p>典型的な「神コンポーネント」の症状が出ていた。音声の状態、抽出語のリスト、バブルの座標、レイアウトツリー、設定値——これらが同じファイルの <code>useState</code> 群として絡み合い、ある機能を直すと別の機能が壊れる。テストを書こうにも、UI を描画しないとロジックに触れられない。</p>",
+        },
+        {
+          type: "callout",
+          variant: "note",
+          title: "リファクタリングの目的",
+          content:
+            "「動くものを綺麗にする」ことではなく、「NLP の精度や UI を、互いを壊さずに差し替えられる」状態を作ること。展示までに何度も試行錯誤する前提だった。",
+        },
+      ],
+    },
+    {
+      id: "layers",
+      heading: "4層への分離",
+      blocks: [
+        {
+          type: "text",
+          content:
+            "<p>クリーンアーキテクチャに倣い、<strong>内側ほど純粋・外側ほど具体</strong>になるよう4層に整理した。依存は常に外から内へ向き、内側は外側を知らない。</p>",
+        },
+        {
+          type: "tree",
+          caption: "Frontend/src の主要ディレクトリ構成",
+          lines: [
+            "src/",
+            "├─ domain/              … 純粋なビジネスロジック（フレームワーク非依存）",
+            "│   ├─ entities/        Term / Bubble / Layout / Minutes",
+            "│   └─ interfaces/      IImportanceStrategy, IPhase,",
+            "│                       ITranscriptionService, IScoreUpdateStrategy",
+            "├─ application/         … ユースケース（処理の流れ）",
+            "│   ├─ bubble/          BubbleImportanceUseCase",
+            "│   ├─ layout/          LayoutUseCase",
+            "│   ├─ phase/           PhaseUseCase",
+            "│   └─ transcription/   TranscriptionUseCase",
+            "├─ infrastructure/      … 外部連携・具体実装",
+            "│   ├─ importance/      FrequencyStrategy, VectorSimilarityStrategy",
+            "│   ├─ speech/          WebSpeech / LocalStt TranscriptionService",
+            "│   ├─ sse/             referDictScoreStream",
+            "│   └─ storage/         LayoutRepository (localStorage/IndexedDB)",
+            "├─ presentation/        … React UI",
+            "│   ├─ layout/          LayoutEngine",
+            "│   ├─ phases/          DuringPresentation / AfterPresentation",
+            "│   ├─ windows/         BubbleCloudWindow, TermDetailWindow …",
+            "│   └─ hooks/           useBubbleLifecycle, useTranscription …",
+            "└─ stores/              … Zustand ストア群（状態の置き場）",
+          ],
         },
         {
           type: "list",
           items: [
-            "音声認識の状態と用語抽出ロジックが密結合 → どちらかを変えると両方が壊れる",
-            "props のバケツリレーが深くなり、コンポーネントが巨大化",
-            "ロジックが React に縛られているためユニットテストが書けない",
+            "<strong>domain</strong>：<code>Term</code> や <code>Bubble</code> といったエンティティと、振る舞いを定義するインターフェース。React も fetch も知らない。",
+            "<strong>application</strong>：「文字起こしを開始する」「重要度を再計算する」などのユースケース。domain のインターフェース越しに処理を組み立てる。",
+            "<strong>infrastructure</strong>：Web Speech API、SSE、localStorage といった具体的な外界との接続。インターフェースの実装を提供する。",
+            "<strong>presentation</strong>：React コンポーネントとフック。状態は Zustand ストアから受け取り、描画に専念する。",
           ],
-        },
-      ],
-    },
-    {
-      id: "solution",
-      heading: "解決：4層クリーンアーキテクチャ",
-      blocks: [
-        {
-          type: "text",
-          content: `<p>依存の向きを常に内側（domain）方向に強制する 4 層構造を採用した。</p>`,
-        },
-        {
-          type: "code",
-          code: {
-            lang: "ディレクトリ構造",
-            code: `src/
-├── domain/         ← 外部依存ゼロ。純粋な型・インターフェース
-│   ├── entities/   Term, Layout, Phase ...
-│   └── interfaces/ IImportanceStrategy, IWindowDefinition ...
-├── application/    ← domain のみに依存。ユースケース
-│   ├── bubble/     BubbleImportanceUseCase
-│   ├── layout/     LayoutUseCase
-│   └── phase/      PhaseUseCase
-├── infrastructure/ ← 外部APIやストレージの具体実装
-│   ├── speech/     WebSpeechTranscriptionService
-│   ├── storage/    LocalStorageRepository
-│   └── importance/ FrequencyStrategy, VectorSimilarityStrategy
-├── stores/         ← Zustand（phaseStore, termStore, transcriptStore ...）
-└── presentation/   ← React UI（App, phases, windows）`,
-          },
-        },
-        {
-          type: "callout",
-          variant: "info",
-          content:
-            "依存の向きは常に内側（domain）方向。infrastructure・presentation が domain に依存し、逆は禁止。この制約がリファクタの道標になった。",
-        },
-      ],
-    },
-    {
-      id: "zustand",
-      heading: "Zustand によるストア分割",
-      blocks: [
-        {
-          type: "text",
-          content: `<p>状態管理には <strong>Zustand</strong> を採用し、ドメインごとにストアを分割した。Context だと状態が増えるにつれ不要な再描画が増える。Redux Toolkit はこの規模にはオーバースペックだ。Zustand はそのちょうど中間にある。</p>`,
-        },
-        {
-          type: "code",
-          code: {
-            lang: "TypeScript",
-            code: `// stores/ — ドメインごとに1ファイル
-phaseStore.ts      // 現在のフェーズ（発表中 / 発表後）
-transcriptStore.ts // 文字起こしテキスト（句読点ごとのチャンク列）
-bubbleStore.ts     // バブルの状態・ライフサイクル管理
-layoutStore.ts     // レイアウトツリー・ウィンドウ設定の永続化
-termStore.ts       // 用語・ピン留め・検索履歴・クリックウェイト`,
-          },
-        },
-        {
-          type: "text",
-          content: `<p>各コンポーネントは <code>useTermStore(s => s.activeTerms)</code> のように必要なスライスだけを購読し、無関係な変更では再レンダリングしない。App.tsx はフェーズを切り替えるだけの薄いシェルになった。</p>`,
         },
       ],
     },
     {
       id: "strategy",
-      heading: "Strategy パターンで重要度アルゴリズムをDI",
+      heading: "Strategy パターンで「差し替え可能」にする",
       blocks: [
         {
           type: "text",
-          content: `<p>バブルの表示サイズを決める重要度スコアは「今後いろいろなアルゴリズムで試したい」という要求があった。そこで <strong>Strategy パターン（DI）</strong> を domain 層に定義した。</p>`,
+          content:
+            "<p>重要度の決め方は、開発中に何度も変わった。最初は<strong>出現頻度</strong>だけ、次に<strong>ベクトル類似度</strong>を導入——。これを <code>if</code> 分岐で書くと application 層が実装に汚染される。そこで domain にインターフェースを置き、実装を infrastructure に逃がした。</p>",
         },
         {
           type: "code",
           code: {
             lang: "TypeScript",
-            code: `// domain/interfaces/IImportanceStrategy.ts
+            title: "domain/interfaces/IImportanceStrategy.ts（概念）",
+            code: `// 重要度の計算方法を抽象化する
 export interface IImportanceStrategy {
-  calculate(term: Term, context: ImportanceContext): number;
+  // 用語群を受け取り、スコア付きで返す
+  score(terms: Term[], context: ScoringContext): ScoredTerm[];
 }
 
-// infrastructure/importance/FrequencyStrategy.ts
-export class FrequencyStrategy implements IImportanceStrategy {
-  calculate(term: Term, context: ImportanceContext): number {
-    return term.frequency / context.maxFrequency;
-  }
-}
-
-// BubbleCloud はインターフェース経由のみ — アルゴリズムが変わっても変更不要
-const score = strategy.calculate(term, context);`,
+// infrastructure 側の実装（差し替え可能）
+//   FrequencyStrategy        … 出現頻度ベース
+//   VectorSimilarityStrategy … テーマベクトルとの類似度ベース`,
           },
+        },
+        {
+          type: "decision",
+          context:
+            "重要度スコアの算出方法は試行錯誤の対象で、頻繁に切り替えたい。だが計算ロジックを UseCase に直接書くと、変更のたびに広い範囲へ影響が出る。",
+          choice:
+            "<code>IImportanceStrategy</code> を domain に定義し、<code>FrequencyStrategy</code> / <code>VectorSimilarityStrategy</code> を infrastructure の差し替え可能な実装として用意した。",
+          because: [
+            "application 層は「スコアを計算する」という意図だけを知り、how を知らずに済む",
+            "新しい指標を試すときは実装クラスを追加するだけでよく、既存コードを壊さない",
+            "純粋関数として切り出せるため、UI を描画せずに単体テストできる",
+          ],
+        },
+      ],
+    },
+    {
+      id: "stores",
+      heading: "Zustand による状態の分割",
+      blocks: [
+        {
+          type: "text",
+          content:
+            "<p>状態管理には <strong>Zustand 5</strong> を採用した。Redux のようなボイラープレートなしに、機能ごとに小さなストアへ分割できる。<code>bubbleStore</code>、<code>phaseStore</code>、<code>layoutStore</code>、<code>termMapWindowSettingsStore</code> など、関心ごとに 15 以上のストアへ切り分けている。</p>",
+        },
+        {
+          type: "list",
+          items: [
+            "Props のバケツリレーが消え、深いコンポーネントから必要な状態へ直接セレクタでアクセスできる",
+            "ストアが小さいため、購読の粒度を絞れて不要な再レンダリングを避けられる",
+            "React の外（物理ループや SSE ブリッジ）からも <code>store.getState()</code> で読み書きできる",
+          ],
         },
         {
           type: "callout",
           variant: "tip",
           content:
-            "アルゴリズムの差し替えが BubbleCloud に影響しない。新しい重要度アルゴリズムを追加する際はインターフェースを実装するだけ。この設計のおかげで後にサーバーサイドスコアリングへの切り替えがスムーズに行えた。",
+            "毎フレーム動く物理演算は、あえて React state を経由しない。Zustand は「いつ React に再描画させ、いつ素の JS として扱うか」を選べる点が、このアプリと相性が良かった。",
         },
       ],
     },
     {
       id: "result",
-      heading: "結果と効果",
+      heading: "得られたもの",
       blocks: [
         {
-          type: "list",
+          type: "stats",
           items: [
-            "<strong>テスタビリティ向上</strong>：domain / application は React 非依存でユニットテスト可能に",
-            "<strong>機能追加が速くなった</strong>：新ウィンドウ追加は Registry に登録するだけ（LayoutEngine への変更不要）",
-            "<strong>音声認識の独立</strong>：<code>WebSpeechTranscriptionService</code> は infrastructure に閉じ、将来 Whisper API への切り替えも容易",
-            "<strong>App.tsx が薄くなった</strong>：フェーズの切り替えのみを担当するシェルへ変化",
+            { value: "4", label: "レイヤ", sub: "domain / app / infra / presentation" },
+            { value: "15+", label: "Zustand ストア", sub: "関心ごとに分割" },
+            { value: "2", label: "Strategy 実装", sub: "頻度 / ベクトル類似度" },
+            { value: "1方向", label: "依存の向き", sub: "外 → 内のみ" },
           ],
+        },
+        {
+          type: "text",
+          content:
+            "<p>分離の最大の見返りは「<strong>怖がらずに実験できる</strong>」ことだった。スコアリングを差し替えても UI は無傷、レイアウトを作り直しても解析は無関係。展示直前まで細部を詰められたのは、この境界線のおかげだ。</p>",
         },
       ],
     },

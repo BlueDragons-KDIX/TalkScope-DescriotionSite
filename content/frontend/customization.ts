@@ -4,131 +4,96 @@ const page: DetailPage = {
   slug: "customization",
   title: "高いカスタマイズ性",
   description:
-    "ダークモード、アクセントカラー6種、文字サイズ、IT単語フィルターのしきい値、ウィンドウ個別設定。すべてをユーザーが制御できるUI設計と実装を解説する。",
-  tags: ["設定", "UX", "アクセシビリティ"],
+    "バブルの大きさも、文字の太さも、表示する語の数も——使う人の見え方は一人ひとり違う。マスターサイズ倍率・バブル倍率・文字サイズ・最大表示数・自動切替をスライダーで自在に調整できるようにし、localStorage と IndexedDB を使い分けて永続化した設計を解説する。",
+  intro:
+    "展示ブースには初見の人が次々訪れる。視力も画面の見方も様々だ。だからこそ「<strong>触ってすぐ自分仕様にできる</strong>」ことを重視した。設定は操作を止めず、その場で結果が反映される。",
+  tags: ["設定", "永続化", "UI"],
   sections: [
     {
-      id: "overview",
-      heading: "カスタマイズの全体像",
+      id: "controls",
+      heading: "調整できる項目",
       blocks: [
         {
-          type: "images",
-          images: [
-            {
-              src: "/mainsetting.png",
-              alt: "設定モーダル",
-              caption: "グローバル設定：表示・文字サイズ・IT単語フィルター",
-            },
-            {
-              src: "/setting-in-window.png",
-              alt: "ウィンドウ個別設定",
-              caption: "ウィンドウ個別設定：フォントサイズの細かい調整",
-            },
-          ],
-          layout: "row",
+          type: "image",
+          image: { src: "/mainsetting.png", alt: "設定モーダル", caption: "主要な設定はスライダーで即時反映" },
         },
         {
           type: "text",
-          content: `<p>TalkScope は「ログイン不要で使えること」と並んで「自分に合わせてカスタマイズできること」を重視した設計になっている。設定は2段階ある。</p>`,
+          content:
+            "<p>バブルウィンドウの見え方は <code>TermMapWindowSettings</code> としてまとめて管理される。各項目には実用的な範囲が設けてあり、スライダーを動かすと描画へ即座に反映される。</p>",
         },
         {
-          type: "list",
+          type: "specs",
           items: [
-            "<strong>グローバル設定</strong>（設定モーダル）：ダークモード・アクセントカラー・文字サイズ・IT単語フィルター",
-            "<strong>ウィンドウ個別設定</strong>（各ウィンドウのギアアイコン）：そのウィンドウ専用のフォントサイズ調整",
+            { term: "masterSizeScale", value: "全体倍率 — <code>0.7 〜 1.6</code>" },
+            { term: "bubbleSizeScale", value: "バブル倍率 — <code>0.5 〜 2.0</code>" },
+            { term: "textFontSizePx", value: "文字サイズ — <code>8 〜 20px</code>" },
+            { term: "maxVisibleTerms", value: "最大表示数 — <code>5 〜 30</code>" },
+            { term: "autoSwitchEnabled", value: "説明の自動切替 — on / off" },
+            { term: "autoSwitchIntervalSec", value: "切替間隔 — <code>1 〜 10秒</code>" },
           ],
         },
       ],
     },
     {
-      id: "darkmode",
-      heading: "ダークモード / ライトモード",
+      id: "frame-aware",
+      heading: "枠サイズに追従する倍率",
       blocks: [
         {
-          type: "images",
-          images: [
-            {
-              src: "/app-base.png",
-              alt: "ライトモード",
-              caption: "ライトモード（デフォルト）",
-            },
-            {
-              src: "/app-fullcustom.png",
-              alt: "ダークモード",
-              caption: "ダークモード",
-            },
-          ],
-          layout: "row",
+          type: "text",
+          content:
+            "<p>カスタマイズは物理エンジンと連動している。<code>maxVisibleTerms</code> はバブル寿命管理のハード上限そのものであり、増やせば多くの語が同時に浮く。倍率を上げて枠を縮めればバブルがはみ出しそうになるが、<strong>枠サイズに応じて倍率が自動調整</strong>されるため破綻しない。</p>",
         },
         {
-          type: "text",
-          content: `<p>設定モーダルのトグルでライト⇔ダークを切り替えられる。デフォルトはライトモード。Tailwind の <code>darkMode: 'class'</code> を使い、<code>document.documentElement.classList.toggle('dark', isDark)</code> で即座に適用される。</p>`,
+          type: "image",
+          image: { src: "/setting-in-window.png", alt: "ウィンドウ内の設定", caption: "ウィンドウごとに個別設定できる" },
+        },
+        {
+          type: "callout",
+          variant: "tip",
+          content:
+            "設定は「全体の見やすさ」と「個々のウィンドウの都合」の二層で持つ。マスター倍率で全体の印象を、ウィンドウ個別設定で局所を詰められる。",
         },
       ],
     },
     {
-      id: "accent",
-      heading: "アクセントカラー6種",
+      id: "persistence",
+      heading: "localStorage と IndexedDB の使い分け",
       blocks: [
         {
           type: "text",
-          content: `<p>Blue / Indigo / Purple / Rose / Emerald / Orange の6色から選択できる。選択したカラーはバブルのボーダー・ハイライト・ウィンドウ枠・分割線などアプリ全体のアクセントに反映される。</p>`,
+          content:
+            "<p>永続化先は、データの性質で使い分けている。<strong>小さく頻繁に読む設定</strong>は localStorage、<strong>大きく構造的なデータ</strong>は IndexedDB（<code>idb</code> ライブラリ経由）に置く。ログイン不要で試せることを最優先したため、すべてブラウザ内に閉じる。</p>",
+        },
+        {
+          type: "table",
+          caption: "永続化レイヤの使い分け",
+          head: ["保存先", "用途", "例"],
+          rows: [
+            ["localStorage", "軽量な設定値", "ウィンドウ設定・文字起こしモード・レイアウト"],
+            ["IndexedDB", "大きく構造的なデータ", "発表ごとの全文・会話/テーマベクトル・語義・ピン留め語"],
+          ],
         },
         {
           type: "code",
           code: {
             lang: "TypeScript",
-            code: `// LayoutEngine.tsx — アクセントカラーとRGBのマッピング
-const ACCENT_RGB: Record<ThemeColor, string> = {
-  blue:    "59,130,246",
-  indigo:  "99,102,241",
-  purple:  "168,85,247",
-  rose:    "244,63,94",
-  emerald: "16,185,129",
-  orange:  "249,115,22",
-};
+            title: "永続化キーの例",
+            code: `// localStorage：設定はキー1つに JSON で保存
+'talkscope:term-map-window-settings'
 
-// CSS変数に注入してウィンドウ枠・分割線に適用
-style={{ "--accent-rgb": ACCENT_RGB[themeColor] } as CSSProperties}`,
+// IndexedDB：'lexiflow-db'（version 2）
+//   presentations … 発表ごとの全文・ベクトル
+//   history       … 発表 × 単語の対応・ピン状態
+//   words         … 単語・説明・ベクトル・理解済みフラグ
+//   pinnedTerms   … ピン中ビュー用の Term`,
           },
-        },
-      ],
-    },
-    {
-      id: "font-size",
-      heading: "文字サイズ調整",
-      blocks: [
-        {
-          type: "text",
-          content: `<p>グローバルな文字サイズスライダーは「各ウィンドウ内の重要語・説明文のみ」を拡大縮小する。ウィンドウタイトルや設定画面の文字サイズは変わらない。</p>
-<p>さらに、ウィンドウごとの設定でマスター・通常文字・重要単語の3種類を個別に調整できる。</p>`,
         },
         {
           type: "callout",
           variant: "info",
           content:
-            "「文字が大きいと見やすいが、全体的に大きくしたくない」というニーズに応えるため、グローバルとローカルの2段階にした。例えば文字起こしウィンドウだけ大きくして、バブルは小さいままにする使い方ができる。",
-        },
-      ],
-    },
-    {
-      id: "it-filter",
-      heading: "IT単語フィルター（関連度しきい値）",
-      blocks: [
-        {
-          type: "text",
-          content: `<p>設定モーダルの「関連度しきい値」スライダーは、どのくらい IT トピックに近い単語だけをバブルとして表示するかを調整できる。</p>`,
-        },
-        {
-          type: "list",
-          items: [
-            "<strong>左端（広く表示）</strong>：IT関連語に限らず、会話全体の重要語を広く拾う",
-            "<strong>右端（IT関連のみ）</strong>：技術用語・IT専門語だけを厳選して表示",
-          ],
-        },
-        {
-          type: "text",
-          content: `<p>「一般的なビジネス会議には広め、エンジニアの技術ディスカッションにはIT寄りに絞る」といった使い分けを想定している。</p>`,
+            "履歴やピン留めを IndexedDB に持たせることで、ブラウザを閉じても過去の発表を再訪できる。重い 300 次元ベクトルも、構造化ストアなら扱いやすい。",
         },
       ],
     },

@@ -4,151 +4,122 @@ const page: DetailPage = {
   slug: "bubble-lifetime",
   title: "バブルライフタイム管理 v3.0",
   description:
-    "バブルが増えすぎると視認性とパフォーマンスが落ちる。v1→v2→v3 と3回書き直した末に辿り着いた「個数ベース上限＋ゾンビ防止」設計の全記録。",
+    "会話が続けばバブルは無限に増える。増えすぎれば視認性が落ち、消し方を誤れば重要な語まで消える。ソフト上限・デスロウ（5秒の猶予）・ハード上限の三段階で寿命を管理し、ピン留めを死守する個数ベース方式に辿り着くまでの設計を公開する。",
+  intro:
+    "「どのバブルを、いつ消すか」は見た目以上に難しい。時間で消すと活発な会話で一瞬で消え、放置すれば画面が埋まる。v3.0 では<strong>時間ではなく個数</strong>を主軸に据え、猶予期間を挟むことで「消えそう」を予感させる挙動にした。",
   tags: ["状態管理", "UX", "アルゴリズム"],
   sections: [
     {
-      id: "problem",
-      heading: "問題：バブルが増えすぎる",
+      id: "history",
+      heading: "v1 → v3 の試行錯誤",
       blocks: [
         {
-          type: "image",
-          image: {
-            src: "/app-bubble.png",
-            alt: "バブルが浮かんでいる状態",
-            caption: "会話が長くなるにつれバブルが増えていく",
-          },
-        },
-        {
-          type: "text",
-          content: `<p>音声認識が進むにつれ、次々と新しい重要語が抽出されてバブルが増えていく。20個を超えると物理エンジンの負荷が上がり、視覚的にも「どれが重要か分からない」状態になる。</p>
-<p>「古いバブルを消す」という単純な方針も、ピン留めしたバブルまで消えてしまったり、一度消えたバブルが同じ単語の再出現で復活（ゾンビ化）したりという問題があった。</p>`,
-        },
-      ],
-    },
-    {
-      id: "v1",
-      heading: "v1.0：30秒タイマー",
-      blocks: [
-        {
-          type: "text",
-          content: `<p>最初のアプローチはシンプルな30秒タイマー。バブルが生成されてから30秒後に削除する。</p>`,
-        },
-        {
-          type: "callout",
-          variant: "warning",
+          type: "lead",
           content:
-            "問題：重要なバブルも時間経過で消えてしまう。ユーザーがピン留めし忘れた大事な用語が静かに消えていく体験は良くない。",
-        },
-      ],
-    },
-    {
-      id: "v2",
-      heading: "v2.0：時間減衰スコアによる優先削除",
-      blocks: [
-        {
-          type: "text",
-          content: `<p>スコアベースの管理へ刷新。各バブルに「時間減衰スコア」を持たせ、スコアが低いものから優先的に削除する。</p>`,
+            "寿命管理は3世代を経ている。失敗から学んだ要点を、まず時系列で振り返る。",
         },
         {
-          type: "code",
-          code: {
-            lang: "TypeScript",
-            code: `// v2: 時間減衰スコア
-score(term) = clickCount * Math.exp(-elapsedMinutes / 5)
-
-// ソフト上限 12個 / ハード上限 20個
-// スコア最下位から順に削除
-// 新出バブルは20秒間削除対象外（猶予期間）
-// 文字起こしに再登場したらタイムスタンプリセット（延命）`,
-          },
-        },
-        {
-          type: "callout",
-          variant: "warning",
-          content:
-            "問題：スコア計算が複雑になりすぎた。チューニングパラメータが増え、「何を変えると挙動がどう変わるか」の予測が難しくなった。",
-        },
-      ],
-    },
-    {
-      id: "v3",
-      heading: "v3.0：個数ベース上限管理（現行）",
-      blocks: [
-        {
-          type: "text",
-          content: `<p>複雑さを捨てて、シンプルで強力な個数管理に切り替えた。ルールは3つだけ。</p>`,
-        },
-        {
-          type: "code",
-          code: {
-            lang: "ルール定義",
-            code: `// バブル数 ≤ 20  → 削除なし。そのまま残し続ける
-// バブル数 21〜30 → 最古のバブルから「寿命カウントダウン」開始
-//                   未ピン留め: 5秒後に削除
-//                   ピン留め済み: 10秒後に削除
-// バブル数 > 30   → 即座に最古から強制削除、常に最大30個を維持`,
-          },
-        },
-        {
-          type: "list",
-          items: [
-            "ルールが直感的で「いつ消えるか」が予測しやすい",
-            "ピン留めバブルは猶予時間が2倍あるため、重要な用語を保護できる",
-            "スコアパラメータのチューニングが不要",
+          type: "table",
+          caption: "ライフタイム管理の世代比較",
+          head: ["世代", "方式", "問題点"],
+          rows: [
+            ["v1", "一定時間で消滅", "活発な会話だと重要語が一瞬で消える"],
+            ["v2", "時間 + 重要度の重み付け", "閾値調整が難しく、画面が埋まる場面が残る"],
+            ["v3", "<strong>個数ベース上限 + 猶予</strong>", "視認性と安定性を両立（現行）"],
           ],
         },
       ],
     },
     {
-      id: "zombie",
-      heading: "ゾンビ防止：historicalTermIdsRef",
+      id: "three-stage",
+      heading: "三段階の寿命モデル",
       blocks: [
         {
           type: "text",
-          content: `<p>寿命で削除されたバブルが、同じ単語が文字起こしに再登場したことで復活してしまう「ゾンビ問題」があった。</p>
-<p>解決策は <code>historicalTermIdsRef</code>。一度でも画面に出現したことがある用語の ID を記憶し続ける ref だ。</p>`,
+          content:
+            "<p>現行モデルは、表示中バブル数を 2 つの閾値で区切る。ハード上限はユーザー設定の最大表示数（<code>maxVisibleTerms</code>）、ソフト上限はそれと 20 の小さい方だ。</p>",
         },
         {
           type: "code",
           code: {
             lang: "TypeScript",
-            code: `// App.tsx
-// リセットされるまで、過去に存在したバブルIDを覚え続ける
-const historicalTermIdsRef = useRef<Set<string>>(new Set());
+            title: "stores/bubbleStore.ts",
+            code: `export const LEGACY_SOFT_LIMIT = 20
+export const SOFT_LIFESPAN_MS = 5000 // デスロウの猶予 = 5秒
 
-// 新しいバブルを追加しようとする時
-function addBubble(term: Term) {
-  // 過去に存在したIDなら追加しない（ゾンビ防止）
-  if (historicalTermIdsRef.current.has(term.id)) return;
-
-  historicalTermIdsRef.current.add(term.id);
-  // ... バブルを追加
-}
-
-// テキストエリアリセット時のみ履歴もクリア
-function handleReset() {
-  historicalTermIdsRef.current.clear();
-  // ...
+export function computeSoftLimit(hardLimit: number): number {
+  return Math.min(LEGACY_SOFT_LIMIT, hardLimit)
 }`,
           },
         },
         {
+          type: "steps",
+          items: [
+            { title: "ソフト上限以下", body: "表示数が <code>softLimit</code> 以下なら、バブルは自動削除されず残り続ける。" },
+            { title: "デスロウ（死刑囚房）", body: "ソフト上限を超えると、古い非ピン留めバブルを「デスロウ」に登録。<strong>5秒の猶予</strong>が与えられ、その間に再び重要度が上がれば生き残れる。" },
+            { title: "ハード上限超過", body: "<code>hardLimit</code> を超えたら猶予なしで即時削除。古い非ピン留めから上限に収まるまで間引く。" },
+          ],
+        },
+        {
           type: "callout",
-          variant: "info",
+          variant: "tip",
           content:
-            "ref を使う理由：この履歴は React の再レンダリングトリガーにする必要がない。state にすると不要な再描画が発生する。純粋に「副作用のないメモ帳」として ref が最適。",
+            "猶予期間（デスロウ）が UX の肝。いきなり消すのではなく「消えゆく猶予」を挟むことで、ユーザーは反応する余地を得る。削除時は 1.2 秒かけてフェードアウトさせ、視線を驚かせない。",
         },
       ],
     },
     {
-      id: "pin",
-      heading: "ピン留め機能（★）",
+      id: "invariant",
+      heading: "ピン留めは絶対に消さない",
       blocks: [
         {
           type: "text",
-          content: `<p>バブル右上の星ボタン（ホバー時に表示）か、詳細パネルの「ピン」ボタンでトグルできる。ピン済みバブルは黄色グロー付きの ★ で強調表示され、削除の猶予時間が2倍になる。</p>
-<p>ピン解除した瞬間からカウントダウンが始まる。「気になったらとりあえずピン」→「後で解除して自然に消す」というフローが想定されている。</p>`,
+          content:
+            "<p>このアルゴリズムを貫く不変条件が一つある。<strong>ピン留めされたバブルは、いかなる段階でも削除対象にしない</strong>。間引きの候補は常に「非ピン留めのうち古いもの」から選ばれる。タイムスタンプは <code>Date.now()</code> で記録され、古さの判定に使われる。</p>",
+        },
+        {
+          type: "list",
+          items: [
+            "削除候補は「非ピン留め × 古い順」でソートして抽出する",
+            "デスロウの経過判定は <code>now − 登録時刻 ≥ SOFT_LIFESPAN_MS</code>",
+            "ライフサイクルの監視は約1秒間隔のフックで回り、表示数を常に上限内へ保つ",
+          ],
+        },
+        {
+          type: "code",
+          code: {
+            lang: "TypeScript",
+            title: "presentation/hooks/useBubbleLifecycle.ts（要約）",
+            code: `const hardLimit = settings.maxVisibleTerms
+const softLimit = computeSoftLimit(hardLimit)
+
+// 1. ハード上限を超えたら即時間引き（非ピン留め・古い順）
+if (sorted.length > hardLimit) { /* overflow を削除 */ }
+
+// 2. ソフト上限超過分をデスロウへ登録
+// 3. デスロウ滞在が DEATH_ROW_MS を超えたら削除
+if (now - deathRow[termId] >= DEATH_ROW_MS) { /* remove */ }`,
+          },
+        },
+      ],
+    },
+    {
+      id: "result",
+      heading: "結果：埋もれない画面",
+      blocks: [
+        {
+          type: "stats",
+          items: [
+            { value: "20", label: "ソフト上限", sub: "min(20, 設定値)" },
+            { value: "5s", label: "デスロウ猶予", sub: "SOFT_LIFESPAN_MS" },
+            { value: "1.2s", label: "フェード時間", sub: "視線への配慮" },
+            { value: "∞", label: "ピン留め寿命", sub: "削除対象外" },
+          ],
+        },
+        {
+          type: "text",
+          content:
+            "<p>「時間で消す」直感的な方式を捨て、個数を軸に猶予を挟む。たったこれだけの変更で、会話の速さに依存せず常に見やすい数のバブルが保たれるようになった。重要だと判断してピン留めした語は、最後まで画面に残る。</p>",
         },
       ],
     },
