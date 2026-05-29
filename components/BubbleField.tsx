@@ -4,20 +4,23 @@ import { useEffect, useRef } from "react";
 
 type Term = { label: string; score: number };
 
-// 解説対象の重要語サンプル（実アプリの抽出語イメージ）
+// IT / ソフトウェア工学の専門語サンプル
 const TERMS: Term[] = [
-  { label: "形態素解析", score: 0.95 },
-  { label: "ベクトル化", score: 0.8 },
-  { label: "コサイン類似度", score: 0.9 },
-  { label: "IDF", score: 0.55 },
-  { label: "EMA テーマ", score: 0.7 },
-  { label: "GiNZA", score: 0.6 },
-  { label: "SSE", score: 0.5 },
-  { label: "Zustand", score: 0.65 },
-  { label: "物理エンジン", score: 0.85 },
-  { label: "係り受け", score: 0.6 },
-  { label: "Gemini", score: 0.75 },
-  { label: "バブル", score: 0.7 },
+  { label: "React", score: 0.85 },
+  { label: "TypeScript", score: 0.9 },
+  { label: "FastAPI", score: 0.8 },
+  { label: "NLP", score: 0.95 },
+  { label: "pgvector", score: 0.65 },
+  { label: "WebSocket", score: 0.7 },
+  { label: "形態素解析", score: 0.88 },
+  { label: "ベクトル検索", score: 0.82 },
+  { label: "LLM", score: 0.92 },
+  { label: "Docker", score: 0.6 },
+  { label: "CI/CD", score: 0.55 },
+  { label: "OAuth", score: 0.58 },
+  { label: "PostgreSQL", score: 0.72 },
+  { label: "GiNZA", score: 0.68 },
+  { label: "Gemini API", score: 0.78 },
 ];
 
 type Node = {
