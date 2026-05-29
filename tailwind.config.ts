@@ -16,10 +16,10 @@ const config: Config = {
       },
       colors: {
         ink: {
-          DEFAULT: "#05060c",
-          deep: "#04040a",
-          surface: "#0a0b14",
-          raised: "#10111d",
+          DEFAULT: "#0e1019",
+          deep: "#0a0c14",
+          surface: "#141722",
+          raised: "#1a1e2b",
         },
         accent: {
           DEFAULT: "var(--accent)",
