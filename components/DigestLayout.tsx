@@ -7,6 +7,7 @@ type Props = {
   title: string;
   description: string;
   items: DigestItem[];
+  stack?: string[];
 };
 
 export default function DigestLayout({
@@ -14,90 +15,81 @@ export default function DigestLayout({
   title,
   description,
   items,
+  stack,
 }: Props) {
-  const isFront = section === "frontend";
+  const label = section === "frontend" ? "Frontend" : "Backend";
 
   return (
-    <div className="mx-auto max-w-6xl px-6 pb-32">
+    <div data-accent={section} className="mx-auto max-w-6xl px-6 pb-10">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-zinc-600 pt-8 mb-12">
-        <Link href="/" className="hover:text-zinc-400 transition-colors">
-          概要
-        </Link>
+      <nav className="flex items-center gap-2 text-xs text-zinc-600 pt-8 mb-10">
+        <Link href="/" className="hover:text-zinc-400 transition-colors">概要</Link>
         <span className="text-zinc-700">/</span>
         <span className="text-zinc-400">{title}</span>
       </nav>
 
       {/* Hero */}
-      <header className="relative pb-16 mb-16 overflow-hidden">
-        {/* Ambient orb */}
-        <div
-          className={`absolute -top-10 left-0 w-[600px] h-[300px] rounded-full blur-[120px] pointer-events-none ${
-            isFront ? "bg-indigo-600/[0.06]" : "bg-violet-600/[0.06]"
-          }`}
-        />
+      <header className="relative pb-12 mb-12 overflow-hidden animate-fade-up">
+        <div className="absolute -top-16 -left-10 w-[640px] h-[340px] rounded-full blur-[130px] pointer-events-none bg-[rgba(var(--accent-rgb),0.08)]" />
         <div className="relative">
-          <div
-            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium tracking-wide mb-5 ${
-              isFront
-                ? "bg-indigo-500/[0.08] border border-indigo-500/20 text-indigo-300"
-                : "bg-violet-500/[0.08] border border-violet-500/20 text-violet-300"
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                isFront ? "bg-indigo-400" : "bg-violet-400"
-              }`}
-            />
-            {isFront ? "Frontend" : "Backend"}
+          <div className="eyebrow mb-5">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+            {label}
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-4">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-5 leading-[1.08] text-balance">
             {title}
           </h1>
-          <p className="text-zinc-400 max-w-2xl leading-relaxed">{description}</p>
+          <p className="text-zinc-400 max-w-2xl leading-relaxed text-[0.95rem]">
+            {description}
+          </p>
+          {stack && stack.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-6">
+              {stack.map((t) => (
+                <span key={t} className="tag-plain font-mono">{t}</span>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="divider mt-14" />
+        <div className="divider mt-12" />
       </header>
 
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {items.map((item) => (
+        {items.map((item, i) => (
           <Link
             key={item.slug}
             href={`/${section}/${item.slug}`}
-            className="group flex flex-col card card-hover overflow-hidden"
+            className="group flex flex-col card card-hover overflow-hidden animate-fade-up"
+            style={{ animationDelay: `${i * 60}ms` }}
           >
-            {/* Cover image */}
-            {item.coverImage && (
-              <div className="relative h-44 overflow-hidden bg-zinc-950 border-b border-white/[0.055]">
+            {item.coverImage ? (
+              <div className="relative h-44 overflow-hidden bg-ink-deep border-b border-white/[0.06]">
                 <Image
                   src={item.coverImage.src}
                   alt={item.coverImage.alt}
                   fill
+                  sizes="(max-width: 768px) 100vw, 380px"
                   className="object-cover object-top group-hover:scale-[1.04] transition-transform duration-500"
                 />
-                {/* Bottom fade */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a16]/60 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />
+              </div>
+            ) : (
+              <div className="relative h-32 overflow-hidden bg-ink-deep border-b border-white/[0.06] flex items-center justify-center">
+                <span className="font-mono text-5xl font-bold text-[rgba(var(--accent-rgb),0.18)] select-none">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div className="absolute inset-0 dot-grid opacity-40" />
               </div>
             )}
 
             <div className="flex flex-col gap-3 p-5 flex-1">
-              {/* Tags */}
               <div className="flex flex-wrap gap-1.5">
                 {item.tags.map((tag) => (
-                  <span key={tag} className="tag-pill">
-                    {tag}
-                  </span>
+                  <span key={tag} className="tag-pill">{tag}</span>
                 ))}
               </div>
 
-              <h2
-                className={`text-[0.9375rem] font-semibold text-zinc-100 transition-colors leading-snug ${
-                  isFront
-                    ? "group-hover:text-indigo-300"
-                    : "group-hover:text-violet-300"
-                }`}
-              >
+              <h2 className="text-[0.95rem] font-semibold text-zinc-100 group-hover:text-accent transition-colors leading-snug">
                 {item.title}
               </h2>
 
@@ -105,24 +97,10 @@ export default function DigestLayout({
                 {item.description}
               </p>
 
-              <div
-                className={`flex items-center gap-1 text-xs font-medium mt-auto ${
-                  isFront ? "text-indigo-400" : "text-violet-400"
-                }`}
-              >
+              <div className="flex items-center gap-1 text-xs font-medium mt-auto text-accent">
                 詳しく読む
-                <svg
-                  className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+                <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
             </div>

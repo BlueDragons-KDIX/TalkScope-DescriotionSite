@@ -1,149 +1,35 @@
 import Link from "next/link";
 import ImageSlot from "@/components/ImageSlot";
-import type { DetailPage, ContentBlock } from "@/content/types";
+import ArticleToc from "@/components/ArticleToc";
+import { renderBlock } from "@/components/ContentBlocks";
+import type { DetailPage } from "@/content/types";
+
+type NavItem = { slug: string; title: string };
 
 type Props = {
   section: "frontend" | "backend";
   sectionLabel: string;
   page: DetailPage;
+  prev?: NavItem | null;
+  next?: NavItem | null;
 };
-
-// Module-level constants — avoid object recreation on every renderBlock call
-// (rendering-hoist-jsx / js-cache-function-results)
-const CALLOUT_STYLES = {
-  info: {
-    wrap: "border-indigo-500/25 bg-indigo-500/[0.07]",
-    text: "text-indigo-200",
-    icon: "text-indigo-400",
-  },
-  tip: {
-    wrap: "border-emerald-500/25 bg-emerald-500/[0.07]",
-    text: "text-emerald-200",
-    icon: "text-emerald-400",
-  },
-  warning: {
-    wrap: "border-amber-500/25 bg-amber-500/[0.07]",
-    text: "text-amber-200",
-    icon: "text-amber-400",
-  },
-} as const;
-
-const CALLOUT_ICONS = { info: "ℹ", tip: "✓", warning: "⚠" } as const;
-
-function renderBlock(block: ContentBlock, idx: number) {
-  switch (block.type) {
-    case "text":
-      return (
-        <div
-          key={idx}
-          className="prose-ts"
-          dangerouslySetInnerHTML={{ __html: block.content }}
-        />
-      );
-
-    case "image":
-      return (
-        <ImageSlot
-          key={idx}
-          src={block.image.src}
-          alt={block.image.alt}
-          caption={block.image.caption}
-        />
-      );
-
-    case "images":
-      return (
-        <div
-          key={idx}
-          className={
-            block.layout === "row"
-              ? "flex flex-col sm:flex-row gap-4 my-6"
-              : "grid grid-cols-1 sm:grid-cols-2 gap-4 my-6"
-          }
-        >
-          {block.images.map((img, i) => (
-            <ImageSlot
-              key={i}
-              src={img.src}
-              alt={img.alt}
-              caption={img.caption}
-              className="my-0"
-            />
-          ))}
-        </div>
-      );
-
-    case "code":
-      return (
-        <div key={idx} className="my-6">
-          <div className="flex items-center justify-between px-4 py-2 bg-[#0a0a18] border border-white/[0.065] rounded-t-xl border-b-0">
-            <span className="text-[11px] text-zinc-500 font-mono tracking-wider">
-              {block.code.lang}
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50" />
-          </div>
-          <pre className="overflow-x-auto rounded-b-xl bg-[#05050d] border border-white/[0.065] border-t-0 p-5">
-            <code className="text-[0.8125rem] font-mono text-zinc-200 leading-relaxed whitespace-pre">
-              {block.code.code}
-            </code>
-          </pre>
-        </div>
-      );
-
-    case "callout": {
-      const s = CALLOUT_STYLES[block.variant];
-      return (
-        <div
-          key={idx}
-          className={`flex gap-3 p-4 rounded-xl border my-6 ${s.wrap}`}
-        >
-          <span className={`text-base leading-none mt-0.5 ${s.icon}`}>
-            {CALLOUT_ICONS[block.variant]}
-          </span>
-          <p className={`text-sm leading-relaxed ${s.text}`}>
-            {block.content}
-          </p>
-        </div>
-      );
-    }
-
-    case "list":
-      return (
-        <ul key={idx} className="my-4 space-y-2.5">
-          {block.items.map((item, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-2.5 text-zinc-300 text-sm leading-relaxed"
-            >
-              <span className="mt-2 w-1 h-1 rounded-full bg-indigo-500/70 flex-shrink-0" />
-              <span dangerouslySetInnerHTML={{ __html: item }} />
-            </li>
-          ))}
-        </ul>
-      );
-
-    default:
-      return null;
-  }
-}
 
 export default function DetailLayout({
   section,
   sectionLabel,
   page,
+  prev,
+  next,
 }: Props) {
+  const tocItems = page.sections.map((s) => ({ id: s.id, heading: s.heading }));
+
   return (
-    <div className="mx-auto max-w-6xl px-6 pb-32">
+    <div data-accent={section} className="mx-auto max-w-6xl px-6 pb-10">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-zinc-600 pt-8 mb-12">
-        <Link href="/" className="hover:text-zinc-400 transition-colors">
-          概要
-        </Link>
+      <nav className="flex items-center gap-2 text-xs text-zinc-600 pt-8 mb-10">
+        <Link href="/" className="hover:text-zinc-400 transition-colors">概要</Link>
         <span className="text-zinc-700">/</span>
-        <Link
-          href={`/${section}`}
-          className="hover:text-zinc-400 transition-colors"
-        >
+        <Link href={`/${section}`} className="hover:text-zinc-400 transition-colors">
           {sectionLabel}
         </Link>
         <span className="text-zinc-700">/</span>
@@ -153,72 +39,95 @@ export default function DetailLayout({
       <div className="flex gap-14">
         {/* Sidebar TOC */}
         <aside className="hidden xl:block w-52 flex-shrink-0">
-          <div className="sticky top-24">
-            <p className="section-heading mb-4">目次</p>
-            <nav className="flex flex-col gap-0.5">
-              {page.sections.map((s) => (
-                <a
-                  key={s.id}
-                  href={`#${s.id}`}
-                  className="text-[0.8125rem] text-zinc-600 hover:text-zinc-300 py-1.5 px-3 rounded-r-md border-l border-zinc-800/80 hover:border-indigo-500/50 hover:bg-indigo-500/[0.04] transition-all duration-150 truncate"
-                >
-                  {s.heading}
-                </a>
-              ))}
-            </nav>
-          </div>
+          <ArticleToc items={tocItems} />
         </aside>
 
         {/* Article */}
-        <article className="flex-1 min-w-0">
-          {/* Header */}
-          <header className="mb-12">
+        <article className="flex-1 min-w-0 animate-fade-up">
+          <header className="mb-10">
             <div className="flex flex-wrap gap-2 mb-5">
               {page.tags.map((tag) => (
-                <span key={tag} className="tag-pill">
-                  {tag}
-                </span>
+                <span key={tag} className="tag-pill">{tag}</span>
               ))}
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4 leading-tight">
+            <h1 className="text-3xl sm:text-[2.6rem] font-bold tracking-tight text-white mb-4 leading-[1.12] text-balance">
               {page.title}
             </h1>
-            <p className="text-zinc-400 leading-relaxed max-w-prose">
+            <p className="text-zinc-400 leading-relaxed max-w-prose text-[0.95rem]">
               {page.description}
             </p>
             <div className="divider mt-8" />
           </header>
 
-          {/* Sections */}
-          {page.sections.map((sec) => (
-            <section key={sec.id} id={sec.id} className="mb-16 scroll-mt-24">
-              <h2 className="text-lg font-bold text-zinc-100 mb-5 flex items-center gap-3">
-                <span className="w-0.5 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500 flex-shrink-0" />
-                {sec.heading}
+          {page.heroImage && (
+            <ImageSlot
+              src={page.heroImage.src}
+              alt={page.heroImage.alt}
+              caption={page.heroImage.caption}
+              priority
+              className="mt-0 mb-10"
+            />
+          )}
+
+          {page.intro && (
+            <p
+              className="text-lg sm:text-xl leading-[1.7] text-zinc-200 font-light mb-12 text-pretty"
+              dangerouslySetInnerHTML={{ __html: page.intro }}
+            />
+          )}
+
+          {page.sections.map((sec, si) => (
+            <section key={sec.id} id={sec.id} className="mb-14 scroll-mt-24">
+              <h2 className="text-xl font-bold text-white mb-6 flex items-baseline gap-3 tracking-tight">
+                <span className="num-badge select-none">
+                  {String(si + 1).padStart(2, "0")}
+                </span>
+                <span className="flex-1">{sec.heading}</span>
               </h2>
-              {sec.blocks.map((block, idx) => renderBlock(block, idx))}
+              <div className="pl-0 sm:pl-[2.4rem]">
+                {sec.blocks.map((block, idx) => renderBlock(block, idx))}
+              </div>
             </section>
           ))}
 
-          {/* Footer nav */}
-          <div className="divider mb-8" />
-          <div className="flex justify-between">
+          {/* Prev / Next */}
+          <div className="divider mb-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {prev ? (
+              <Link
+                href={`/${section}/${prev.slug}`}
+                className="card card-hover p-4 group"
+              >
+                <p className="text-[11px] text-zinc-600 mb-1 font-mono">← 前の記事</p>
+                <p className="text-sm font-medium text-zinc-200 group-hover:text-accent transition-colors leading-snug">
+                  {prev.title}
+                </p>
+              </Link>
+            ) : (
+              <span />
+            )}
+            {next ? (
+              <Link
+                href={`/${section}/${next.slug}`}
+                className="card card-hover p-4 group text-right"
+              >
+                <p className="text-[11px] text-zinc-600 mb-1 font-mono">次の記事 →</p>
+                <p className="text-sm font-medium text-zinc-200 group-hover:text-accent transition-colors leading-snug">
+                  {next.title}
+                </p>
+              </Link>
+            ) : (
+              <span />
+            )}
+          </div>
+
+          <div className="mt-8">
             <Link
               href={`/${section}`}
               className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-200 transition-colors"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M15 19l-7-7 7-7"
-                />
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
               </svg>
               {sectionLabel}一覧に戻る
             </Link>
