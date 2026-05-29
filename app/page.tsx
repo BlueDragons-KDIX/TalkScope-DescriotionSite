@@ -194,13 +194,20 @@ export default function HomePage() {
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {windows.map((w) => (
-              <figure key={w.label} className="card card-hover overflow-hidden group">
-                <div className="overflow-hidden bg-ink-deep border-b border-white/[0.05]">
-                  <Image src={w.src} alt={w.label} width={400} height={500} className="w-full h-auto object-top group-hover:scale-[1.03] transition-transform duration-500" />
+              <figure key={w.label} className="card card-hover overflow-hidden group flex flex-col">
+                <div className="relative h-40 overflow-hidden bg-ink-deep border-b border-white/[0.06]">
+                  <Image
+                    src={w.src}
+                    alt={w.label}
+                    width={978}
+                    height={636}
+                    className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-500"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink-surface via-ink-surface/80 to-transparent pointer-events-none" />
                 </div>
-                <figcaption className="px-3 py-2.5">
-                  <p className="text-xs font-medium text-zinc-300">{w.label}</p>
-                  <p className="text-[11px] text-zinc-600 mt-0.5">{w.desc}</p>
+                <figcaption className="px-3.5 py-3 bg-ink-raised/70 border-t border-[rgba(var(--accent-rgb),0.12)]">
+                  <p className="text-xs font-semibold text-zinc-200">{w.label}</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">{w.desc}</p>
                 </figcaption>
               </figure>
             ))}
