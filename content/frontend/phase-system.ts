@@ -32,8 +32,8 @@ const page: DetailPage = {
         {
           type: "images",
           images: [
-            { src: "/app-bubble.png", alt: "発表中フェーズ", caption: "発表中：バブルが流れる" },
-            { src: "/app-ranking.png", alt: "発表後フェーズ", caption: "発表後：重要語ランキング" },
+            { src: "/frontend/app-bubble.png", alt: "発表中フェーズ", caption: "発表中：バブルが流れる" },
+            { src: "/frontend/app-ranking.png", alt: "発表後フェーズ", caption: "発表後：重要語ランキング" },
           ],
           layout: "row",
         },

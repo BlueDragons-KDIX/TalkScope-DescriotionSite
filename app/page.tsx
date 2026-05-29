@@ -29,10 +29,10 @@ const features = [
 ];
 
 const windows = [
-  { src: "/window-transcription.png", label: "文字起こし", desc: "音声をリアルタイムにテキスト化" },
-  { src: "/window-bubble.png", label: "バブルクラウド", desc: "重要語を視覚的に浮かべる" },
-  { src: "/window-discription.png", label: "説明パネル", desc: "文脈に応じた意味を解説" },
-  { src: "/window-history.png", label: "検索履歴", desc: "閲覧した用語を一覧表示" },
+  { src: "/frontend/window-transcription.png", label: "文字起こし", desc: "音声をリアルタイムにテキスト化" },
+  { src: "/frontend/window-bubble.png", label: "バブルクラウド", desc: "重要語を視覚的に浮かべる" },
+  { src: "/frontend/window-discription.png", label: "説明パネル", desc: "文脈に応じた意味を解説" },
+  { src: "/frontend/window-history.png", label: "検索履歴", desc: "閲覧した用語を一覧表示" },
 ];
 
 const stack = [
@@ -53,7 +53,8 @@ export default function HomePage() {
           <div className="max-w-3xl animate-fade-up">
             <div className="eyebrow mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-              KC3Hack 2026 — チーム19 ブルードラゴンズ
+              青龍&apos;s
+              <span className="text-zinc-500 font-normal">（ブルードラゴンズ）</span>
             </div>
 
             <h1
@@ -66,11 +67,13 @@ export default function HomePage() {
             <p className="text-xl sm:text-2xl text-zinc-200 max-w-xl leading-snug mb-4 font-light text-balance">
               専門的な会話の理解を、リアルタイムで支援する Web アプリケーション。
             </p>
-            <p className="text-sm text-zinc-500 max-w-xl leading-relaxed mb-9">
-              音声を文字起こしし、NLP で文脈上重要な語を抽出・スコアリングして強調表示。
-              ワンクリックで意味を確認できる導線が、難解な会話の理解を追いかけます。
-              この技術解説サイトは、その設計と実装を深掘りします。
-            </p>
+            <div className="surface-panel px-5 py-4 max-w-xl mb-9">
+              <p className="text-sm text-zinc-300 leading-relaxed">
+                音声を文字起こしし、NLP で文脈上重要な語を抽出・スコアリングして強調表示。
+                ワンクリックで意味を確認できる導線が、難解な会話の理解を追いかけます。
+                この技術解説サイトは、その設計と実装を深掘りします。
+              </p>
+            </div>
 
             <div className="flex flex-wrap gap-3">
               <Link href="/frontend" className="btn-primary group">
@@ -91,7 +94,7 @@ export default function HomePage() {
           <div className="relative">
             <div className="absolute inset-x-8 inset-y-4 bg-[rgba(var(--accent-rgb),0.1)] blur-[70px] rounded-3xl pointer-events-none" />
             <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.75)]">
-              <Image src="/app-bubble.png" alt="TalkScope — バブルクラウド画面" width={1280} height={720} className="w-full h-auto" priority />
+              <Image src="/frontend/app-bubble.png" alt="TalkScope — バブルクラウド画面" width={1280} height={720} className="w-full h-auto" priority />
             </div>
           </div>
         </section>
@@ -102,7 +105,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-white mb-3 tracking-tight text-balance">
             専門的な会話で生まれる、3つの理解の壁
           </h2>
-          <p className="text-zinc-500 mb-10 max-w-xl leading-relaxed text-sm">
+          <p className="surface-panel px-5 py-4 text-zinc-300 mb-10 max-w-xl leading-relaxed text-sm">
             技術発表、学術的な議論、業界用語が飛び交う商談。専門的な場で生まれる理解の壁を、TalkScope は三方向から取り除きます。
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -125,7 +128,7 @@ export default function HomePage() {
         <section className="mb-32">
           <p className="kicker mb-4">How it works</p>
           <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">声が、理解に変わるまで</h2>
-          <p className="text-zinc-500 mb-10 max-w-xl text-sm leading-relaxed">
+          <p className="surface-panel px-5 py-4 text-zinc-300 mb-10 max-w-xl text-sm leading-relaxed">
             録音から意味確認まで、5つの段が一本のパイプラインとして連携します。フロントとバックエンドが役割を分担し、リアルタイム性と解析精度を両立させています。
           </p>
           <div className="relative">
@@ -150,7 +153,7 @@ export default function HomePage() {
                   <h3 className="text-lg sm:text-xl font-bold text-zinc-50 tracking-tight mb-2.5">
                     {f.step}
                   </h3>
-                  <p className="text-[0.8rem] text-zinc-500 leading-relaxed max-w-[13rem]">{f.desc}</p>
+                  <p className="surface-panel px-3 py-2.5 text-[0.8rem] text-zinc-300 leading-relaxed max-w-[13rem]">{f.desc}</p>
                   {/* 次工程への矢印 */}
                   {i < flow.length - 1 && (
                     <span className="hidden lg:grid place-items-center absolute top-12 right-0 translate-x-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full bg-ink-surface border border-[rgba(var(--accent-rgb),0.4)] text-accent">
@@ -188,18 +191,25 @@ export default function HomePage() {
         <section className="mb-32">
           <p className="kicker mb-4">Workspace</p>
           <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">独立したウィンドウを、自由に配置</h2>
-          <p className="text-zinc-500 mb-10 max-w-xl text-sm leading-relaxed">
+          <p className="surface-panel px-5 py-4 text-zinc-300 mb-10 max-w-xl text-sm leading-relaxed">
             各ウィンドウは独立して動作し、ドラッグ＆ドロップで自由に配置・リサイズできます。発表スタイルや画面サイズに合わせて最適なレイアウトを構築できます。
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {windows.map((w) => (
-              <figure key={w.label} className="card card-hover overflow-hidden group">
-                <div className="overflow-hidden bg-ink-deep border-b border-white/[0.05]">
-                  <Image src={w.src} alt={w.label} width={400} height={500} className="w-full h-auto object-top group-hover:scale-[1.03] transition-transform duration-500" />
+              <figure key={w.label} className="card card-hover overflow-hidden group flex flex-col">
+                <div className="relative h-40 overflow-hidden bg-ink-deep border-b border-white/[0.06]">
+                  <Image
+                    src={w.src}
+                    alt={w.label}
+                    width={978}
+                    height={636}
+                    className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-500"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink-surface via-ink-surface/80 to-transparent pointer-events-none" />
                 </div>
-                <figcaption className="px-3 py-2.5">
-                  <p className="text-xs font-medium text-zinc-300">{w.label}</p>
-                  <p className="text-[11px] text-zinc-600 mt-0.5">{w.desc}</p>
+                <figcaption className="px-3.5 py-3 bg-ink-raised/70 border-t border-[rgba(var(--accent-rgb),0.12)]">
+                  <p className="text-xs font-semibold text-zinc-200">{w.label}</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">{w.desc}</p>
                 </figcaption>
               </figure>
             ))}
@@ -210,21 +220,21 @@ export default function HomePage() {
         <section className="mb-32">
           <p className="kicker mb-4">Deep Dive</p>
           <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">実装のこだわりを、2方向から</h2>
-          <p className="text-zinc-500 mb-10 max-w-xl text-sm leading-relaxed">
+          <p className="surface-panel px-5 py-4 text-zinc-300 mb-10 max-w-xl text-sm leading-relaxed">
             アーキテクチャの設計判断から物理エンジン、スコアリングアルゴリズムまで。フロントとバックエンドそれぞれの記事を公開しています。
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Link href="/frontend" data-accent="frontend" className="group card card-hover p-7">
               <div className="flex items-center justify-between mb-4">
                 <span className="tag-pill">Frontend</span>
-                <span className="font-mono text-xs text-zinc-600">6 articles</span>
+                <span className="font-mono text-xs text-zinc-600">5 articles</span>
               </div>
               <h3 className="font-semibold text-zinc-100 group-hover:text-accent transition-colors mb-2 text-lg">フロントエンド設計</h3>
               <p className="text-sm text-zinc-500 leading-relaxed mb-5">
-                システム設計（アーキテクチャ・物理エンジン・寿命管理）と UI/UX デザイン（レイアウト・フェーズ・カスタマイズ）の2分類で公開。
+                システム設計（アーキテクチャ・物理エンジン・寿命管理）と UI/UX デザイン（レイアウト・カスタマイズ）の2分類で公開。
               </p>
               <span className="inline-flex items-center gap-1 text-xs text-accent font-medium">
-                6本の記事を読む
+                5本の記事を読む
                 <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </span>
             </Link>
@@ -249,10 +259,12 @@ export default function HomePage() {
         <section>
           <p className="kicker mb-4">Tech Stack</p>
           <h2 className="text-3xl font-bold text-white mb-8 tracking-tight">使用技術</h2>
-          <div className="flex flex-wrap gap-2">
-            {stack.map((t) => (
-              <span key={t} className="tag-plain font-mono">{t}</span>
-            ))}
+          <div className="surface-panel p-5">
+            <div className="flex flex-wrap gap-2">
+              {stack.map((t) => (
+                <span key={t} className="tag-plain font-mono">{t}</span>
+              ))}
+            </div>
           </div>
         </section>
       </div>

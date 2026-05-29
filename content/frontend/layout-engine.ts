@@ -51,7 +51,7 @@ export type LayoutNode = LeafNode | SplitNode`,
         },
         {
           type: "image",
-          image: { src: "/app-fullcustom.png", alt: "フルカスタムレイアウト", caption: "複数ウィンドウを自在に配置した状態" },
+          image: { src: "/frontend/app-fullcustom.png", alt: "フルカスタムレイアウト", caption: "複数ウィンドウを自在に配置した状態" },
         },
       ],
     },

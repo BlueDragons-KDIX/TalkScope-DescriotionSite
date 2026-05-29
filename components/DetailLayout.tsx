@@ -53,7 +53,7 @@ export default function DetailLayout({
             <h1 className="text-3xl sm:text-[2.6rem] font-bold tracking-tight text-white mb-4 leading-[1.12] text-balance">
               {page.title}
             </h1>
-            <p className="text-zinc-400 leading-relaxed max-w-prose text-[0.95rem]">
+            <p className="surface-panel px-5 py-4 text-zinc-300 leading-relaxed max-w-prose text-[0.95rem]">
               {page.description}
             </p>
             <div className="divider mt-8" />
@@ -70,8 +70,8 @@ export default function DetailLayout({
           )}
 
           {page.intro && (
-            <p
-              className="text-lg sm:text-xl leading-[1.7] text-zinc-200 font-light mb-12 text-pretty"
+            <div
+              className="surface-panel px-5 py-4 text-lg sm:text-xl leading-[1.7] text-zinc-200 font-light mb-12 text-pretty"
               dangerouslySetInnerHTML={{ __html: page.intro }}
             />
           )}

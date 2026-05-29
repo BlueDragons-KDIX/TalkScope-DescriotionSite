@@ -40,7 +40,7 @@ export default function ArticleToc({ items }: { items: Item[] }) {
   }, [items]);
 
   return (
-    <div className="sticky top-24">
+    <div className="sticky top-24 surface-panel p-4">
       <p className="kicker mb-4 text-zinc-500">目次</p>
       <nav className="flex flex-col gap-0.5">
         {items.map((s) => {

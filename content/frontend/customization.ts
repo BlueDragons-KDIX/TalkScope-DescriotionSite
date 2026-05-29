@@ -15,7 +15,7 @@ const page: DetailPage = {
       blocks: [
         {
           type: "image",
-          image: { src: "/mainsetting.png", alt: "設定モーダル", caption: "主要な設定はスライダーで即時反映" },
+          image: { src: "/frontend/mainsetting.png", alt: "設定モーダル", caption: "主要な設定はスライダーで即時反映" },
         },
         {
           type: "text",
@@ -46,7 +46,7 @@ const page: DetailPage = {
         },
         {
           type: "image",
-          image: { src: "/setting-in-window.png", alt: "ウィンドウ内の設定", caption: "ウィンドウごとに個別設定できる" },
+          image: { src: "/frontend/setting-in-window.png", alt: "ウィンドウ内の設定", caption: "ウィンドウごとに個別設定できる" },
         },
         {
           type: "callout",

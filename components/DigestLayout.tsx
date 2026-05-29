@@ -58,7 +58,7 @@ function DigestCard({
           {item.title}
         </h2>
 
-        <p className="text-sm text-zinc-500 leading-relaxed flex-1">
+        <p className="text-sm text-zinc-300 leading-relaxed flex-1">
           {item.description}
         </p>
 
@@ -103,7 +103,7 @@ export default function DigestLayout({
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-5 leading-[1.08] text-balance">
             {title}
           </h1>
-          <p className="text-zinc-400 max-w-2xl leading-relaxed text-[0.95rem]">
+          <p className="surface-panel px-5 py-4 text-zinc-300 max-w-2xl leading-relaxed text-[0.95rem]">
             {description}
           </p>
           {stack && stack.length > 0 && (
@@ -122,7 +122,7 @@ export default function DigestLayout({
         <div className="space-y-16">
           {groups.map((group, gi) => (
             <section key={group.id}>
-              <div className="flex items-start gap-4 mb-7">
+              <div className="flex items-start gap-4 mb-7 surface-panel p-5">
                 <span className="flex-shrink-0 grid place-items-center w-12 h-12 rounded-2xl text-2xl leading-none bg-[rgba(var(--accent-rgb),0.1)] border border-[rgba(var(--accent-rgb),0.25)]">
                   {group.icon ?? String(gi + 1).padStart(2, "0")}
                 </span>
@@ -138,7 +138,7 @@ export default function DigestLayout({
                       {group.items.length} articles
                     </span>
                   </div>
-                  <p className="text-sm text-zinc-500 leading-relaxed max-w-2xl">
+                  <p className="text-sm text-zinc-300 leading-relaxed max-w-2xl">
                     {group.description}
                   </p>
                 </div>
