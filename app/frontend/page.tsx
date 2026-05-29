@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import DigestLayout from "@/components/DigestLayout";
-import { frontendDigest, frontendItems, frontendStack } from "@/content/frontend/index";
+import { frontendDigest, frontendItems, frontendStack, frontendGroups } from "@/content/frontend/index";
 
 export const metadata: Metadata = {
   title: "フロントエンド設計",
@@ -14,6 +14,7 @@ export default function FrontendPage() {
       title={frontendDigest.title}
       description={frontendDigest.description}
       items={frontendItems}
+      groups={frontendGroups}
       stack={frontendStack}
     />
   );

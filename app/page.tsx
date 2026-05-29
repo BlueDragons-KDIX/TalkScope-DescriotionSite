@@ -129,18 +129,36 @@ export default function HomePage() {
             録音から意味確認まで、5つの段が一本のパイプラインとして連携します。フロントとバックエンドが役割を分担し、リアルタイム性と解析精度を両立させています。
           </p>
           <div className="relative">
-            <div className="hidden lg:block absolute top-10 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-[rgba(var(--accent-rgb),0.3)] to-transparent" />
-            <ol className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-y-10 gap-x-4">
+            {/* 工程をつなぐライン（デスクトップ） */}
+            <div className="hidden lg:block absolute top-12 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-[rgba(var(--accent-rgb),0.05)] via-[rgba(var(--accent-rgb),0.5)] to-[rgba(var(--accent-rgb),0.05)]" />
+            <ol className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-y-14 gap-x-2">
               {flow.map((f, i) => (
-                <li key={f.step} className="relative flex flex-col items-center text-center">
-                  <div className="relative z-10 grid place-items-center w-20 h-20 rounded-2xl card mb-5">
-                    <span className="text-3xl leading-none">{f.icon}</span>
-                    <span className="absolute -top-2.5 -right-2.5 grid place-items-center w-7 h-7 rounded-full bg-accent text-xs font-mono font-bold text-white shadow-[0_4px_14px_-2px_rgba(var(--accent-rgb),0.7)] tabular-nums">
-                      {i + 1}
+                <li key={f.step} className="relative flex flex-col items-center text-center px-2">
+                  {/* 番号ノード（主役） */}
+                  <div className="relative z-10 mb-6">
+                    <div className="grid place-items-center w-24 h-24 rounded-full bg-ink-surface border-2 border-[rgba(var(--accent-rgb),0.4)] shadow-[0_10px_36px_-10px_rgba(var(--accent-rgb),0.65)]">
+                      <span className="font-mono text-[2.75rem] font-bold gradient-text leading-none tabular-nums">
+                        {i + 1}
+                      </span>
+                    </div>
+                    {/* サポート絵文字 */}
+                    <span className="absolute -bottom-1.5 -right-1.5 grid place-items-center w-10 h-10 rounded-full bg-ink-raised border border-white/10 text-xl leading-none shadow-[0_4px_12px_-2px_rgba(0,0,0,0.6)]">
+                      {f.icon}
                     </span>
                   </div>
-                  <h3 className="text-[0.95rem] font-bold text-zinc-100 mb-2">{f.step}</h3>
-                  <p className="text-xs text-zinc-500 leading-relaxed max-w-[13rem]">{f.desc}</p>
+                  {/* 工程名（メイン） */}
+                  <h3 className="text-lg sm:text-xl font-bold text-zinc-50 tracking-tight mb-2.5">
+                    {f.step}
+                  </h3>
+                  <p className="text-[0.8rem] text-zinc-500 leading-relaxed max-w-[13rem]">{f.desc}</p>
+                  {/* 次工程への矢印 */}
+                  {i < flow.length - 1 && (
+                    <span className="hidden lg:grid place-items-center absolute top-12 right-0 translate-x-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full bg-ink-surface border border-[rgba(var(--accent-rgb),0.4)] text-accent">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  )}
                 </li>
               ))}
             </ol>
@@ -203,7 +221,7 @@ export default function HomePage() {
               </div>
               <h3 className="font-semibold text-zinc-100 group-hover:text-accent transition-colors mb-2 text-lg">フロントエンド設計</h3>
               <p className="text-sm text-zinc-500 leading-relaxed mb-5">
-                クリーンアーキテクチャ・物理エンジン・動的レイアウト・バブル寿命管理・フェーズシステム・カスタマイズ性。
+                システム設計（アーキテクチャ・物理エンジン・寿命管理）と UI/UX デザイン（レイアウト・フェーズ・カスタマイズ）の2分類で公開。
               </p>
               <span className="inline-flex items-center gap-1 text-xs text-accent font-medium">
                 6本の記事を読む
