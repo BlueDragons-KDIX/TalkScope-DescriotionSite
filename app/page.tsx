@@ -65,6 +65,26 @@ const windows = [
   },
 ];
 
+// Hoisted to module level — avoid inline array recreation on every render
+// (rendering-hoist-jsx)
+const problems = [
+  {
+    n: "01",
+    title: "聞き取りの壁",
+    desc: "専門用語が多い会話は音声そのものが聞き取りづらく、聞き返すタイミングを逃す。",
+  },
+  {
+    n: "02",
+    title: "意味理解の壁",
+    desc: "初めて聞く技術用語の意味がわからず、その後の話の流れについていけなくなる。",
+  },
+  {
+    n: "03",
+    title: "重要語把握の壁",
+    desc: "どの単語がキーワードか判断できず、メモを取るタイミングや集中すべき箇所を見失う。",
+  },
+];
+
 export default function HomePage() {
   return (
     <div className="mx-auto max-w-6xl px-6 pb-32">
@@ -166,23 +186,7 @@ export default function HomePage() {
           技術的な発表・学術的な議論・業界用語が飛び交う商談。専門的な場で生まれる理解の壁を、TalkScope は三方向から取り除きます。
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[
-            {
-              n: "01",
-              title: "聞き取りの壁",
-              desc: "専門用語が多い会話は音声そのものが聞き取りづらく、聞き返すタイミングを逃す。",
-            },
-            {
-              n: "02",
-              title: "意味理解の壁",
-              desc: "初めて聞く技術用語の意味がわからず、その後の話の流れについていけなくなる。",
-            },
-            {
-              n: "03",
-              title: "重要語把握の壁",
-              desc: "どの単語がキーワードか判断できず、メモを取るタイミングや集中すべき箇所を見失う。",
-            },
-          ].map((item) => (
+          {problems.map((item) => (
             <div key={item.n} className="card p-6">
               <span className="block font-mono text-2xl font-bold gradient-text mb-4 leading-none">
                 {item.n}
