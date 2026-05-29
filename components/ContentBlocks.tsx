@@ -124,6 +124,46 @@ export function renderBlock(block: ContentBlock, idx: number) {
         </ul>
       );
 
+    case "cards": {
+      const cols = block.columns ?? (block.items.length === 2 ? 2 : 3);
+      const grid = cols === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3";
+      return (
+        <div key={idx} className={`my-7 grid grid-cols-1 ${grid} gap-3.5`}>
+          {block.items.map((c, i) => (
+            <div
+              key={i}
+              className="group relative card card-hover p-5 overflow-hidden"
+            >
+              <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(var(--accent-rgb),0.6)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center gap-2.5 mb-3">
+                {c.icon ? (
+                  <span className="flex-shrink-0 grid place-items-center w-9 h-9 rounded-xl bg-[rgba(var(--accent-rgb),0.1)] border border-[rgba(var(--accent-rgb),0.22)] text-lg leading-none">
+                    {c.icon}
+                  </span>
+                ) : (
+                  <span className="flex-shrink-0 font-mono text-xl font-bold gradient-text leading-none tabular-nums">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                )}
+                {c.tag && (
+                  <span className="ml-auto text-[10px] uppercase tracking-widest font-mono text-zinc-500">
+                    {c.tag}
+                  </span>
+                )}
+              </div>
+              <h3 className="text-[0.95rem] font-semibold text-zinc-100 mb-1.5 leading-snug">
+                {c.title}
+              </h3>
+              <p
+                className="text-sm text-zinc-400 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: c.body }}
+              />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
     case "stats":
       return (
         <div
