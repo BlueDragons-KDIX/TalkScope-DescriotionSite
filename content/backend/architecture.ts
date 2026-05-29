@@ -90,11 +90,11 @@ const page: DetailPage = {
             "<p>リアルタイム性が要る軽い処理（音声認識・文字起こし・描画）はフロントに、重い解析（形態素解析・係り受け・ベクトル類似度）はバックに置く。両者は HTTP / SSE の薄い境界で繋がり、<strong>NLP の精度を段階的に上げても UI は変わらない</strong>ように設計されている。</p>",
         },
         {
-          type: "list",
+          type: "cards",
           items: [
-            "フロント：Web Speech API での文字起こし、バブル描画、操作の即応性",
-            "バック：形態素解析・ベクトル化・スコアリング・語義生成という計算の重心",
-            "境界：ベクトル化 API・スコアリング API・辞書参照 SSE の3系統",
+            { icon: "🖥️", title: "フロント", tag: "Realtime", body: "Web Speech API での文字起こし、バブル描画、操作の即応性。" },
+            { icon: "⚙️", title: "バック", tag: "Compute", body: "形態素解析・ベクトル化・スコアリング・語義生成という計算の重心。" },
+            { icon: "🔌", title: "境界", tag: "API", body: "ベクトル化 API・スコアリング API・辞書参照 SSE の3系統。" },
           ],
         },
         {
