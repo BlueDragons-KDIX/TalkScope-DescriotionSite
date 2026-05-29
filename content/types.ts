@@ -5,12 +5,35 @@ export type ImageRef = {
 };
 
 export type ContentBlock =
+  // 本文（HTML 文字列を許容）
   | { type: "text"; content: string }
+  // リード文（セクション冒頭の大きめの段落）
+  | { type: "lead"; content: string }
+  // サブ見出し（h3 相当）
+  | { type: "subheading"; content: string }
+  // 画像
   | { type: "image"; image: ImageRef }
   | { type: "images"; images: ImageRef[]; layout?: "grid" | "row" }
-  | { type: "code"; code: { lang: string; code: string } }
-  | { type: "callout"; variant: "info" | "tip" | "warning"; content: string }
-  | { type: "list"; items: string[] };
+  // コードブロック
+  | { type: "code"; code: { lang: string; title?: string; code: string } }
+  // コールアウト
+  | { type: "callout"; variant: "info" | "tip" | "warning" | "note"; title?: string; content: string }
+  // 箇条書き
+  | { type: "list"; ordered?: boolean; items: string[] }
+  // 指標カード（数値の強調）
+  | { type: "stats"; items: { value: string; label: string; sub?: string }[] }
+  // 手順 / パイプライン（番号付きのステップ）
+  | { type: "steps"; items: { title: string; body: string }[] }
+  // 表
+  | { type: "table"; head: string[]; rows: string[][]; caption?: string }
+  // 設計判断（ADR 風）
+  | { type: "decision"; context: string; choice: string; because: string[] }
+  // ファイルツリー（等幅）
+  | { type: "tree"; lines: string[]; caption?: string }
+  // 仕様リスト（key-value）
+  | { type: "specs"; items: { term: string; value: string }[] }
+  // 引用
+  | { type: "quote"; text: string; cite?: string };
 
 export type Section = {
   id: string;
@@ -21,8 +44,13 @@ export type Section = {
 export type DetailPage = {
   slug: string;
   title: string;
+  /** 一覧カードや記事ヘッダーで使う短い要約 */
   description: string;
+  /** 記事冒頭のリード文（任意・HTML 可） */
+  intro?: string;
   tags: string[];
+  /** ヘッダー直下のヒーロー画像（任意） */
+  heroImage?: ImageRef;
   sections: Section[];
 };
 
