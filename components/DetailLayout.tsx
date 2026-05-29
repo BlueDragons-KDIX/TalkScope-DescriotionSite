@@ -8,6 +8,28 @@ type Props = {
   page: DetailPage;
 };
 
+// Module-level constants — avoid object recreation on every renderBlock call
+// (rendering-hoist-jsx / js-cache-function-results)
+const CALLOUT_STYLES = {
+  info: {
+    wrap: "border-indigo-500/25 bg-indigo-500/[0.07]",
+    text: "text-indigo-200",
+    icon: "text-indigo-400",
+  },
+  tip: {
+    wrap: "border-emerald-500/25 bg-emerald-500/[0.07]",
+    text: "text-emerald-200",
+    icon: "text-emerald-400",
+  },
+  warning: {
+    wrap: "border-amber-500/25 bg-amber-500/[0.07]",
+    text: "text-amber-200",
+    icon: "text-amber-400",
+  },
+} as const;
+
+const CALLOUT_ICONS = { info: "ℹ", tip: "✓", warning: "⚠" } as const;
+
 function renderBlock(block: ContentBlock, idx: number) {
   switch (block.type) {
     case "text":
@@ -40,7 +62,13 @@ function renderBlock(block: ContentBlock, idx: number) {
           }
         >
           {block.images.map((img, i) => (
-            <ImageSlot key={i} src={img.src} alt={img.alt} caption={img.caption} className="my-0" />
+            <ImageSlot
+              key={i}
+              src={img.src}
+              alt={img.alt}
+              caption={img.caption}
+              className="my-0"
+            />
           ))}
         </div>
       );
@@ -48,40 +76,46 @@ function renderBlock(block: ContentBlock, idx: number) {
     case "code":
       return (
         <div key={idx} className="my-6">
-          <div className="flex items-center justify-between px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-t-xl border-b-0">
-            <span className="text-xs text-zinc-500 font-mono">{block.code.lang}</span>
+          <div className="flex items-center justify-between px-4 py-2 bg-[#0a0a18] border border-white/[0.065] rounded-t-xl border-b-0">
+            <span className="text-[11px] text-zinc-500 font-mono tracking-wider">
+              {block.code.lang}
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50" />
           </div>
-          <pre className="overflow-x-auto rounded-b-xl bg-zinc-950 border border-zinc-800 border-t-0 p-4">
-            <code className="text-sm font-mono text-zinc-200 leading-relaxed whitespace-pre">
+          <pre className="overflow-x-auto rounded-b-xl bg-[#05050d] border border-white/[0.065] border-t-0 p-5">
+            <code className="text-[0.8125rem] font-mono text-zinc-200 leading-relaxed whitespace-pre">
               {block.code.code}
             </code>
           </pre>
         </div>
       );
 
-    case "callout":
-      const colors = {
-        info: "border-indigo-800 bg-indigo-950/40 text-indigo-200",
-        tip: "border-emerald-800 bg-emerald-950/40 text-emerald-200",
-        warning: "border-amber-800 bg-amber-950/40 text-amber-200",
-      };
-      const icons = { info: "ℹ", tip: "✓", warning: "⚠" };
+    case "callout": {
+      const s = CALLOUT_STYLES[block.variant];
       return (
         <div
           key={idx}
-          className={`flex gap-3 p-4 rounded-xl border my-6 ${colors[block.variant]}`}
+          className={`flex gap-3 p-4 rounded-xl border my-6 ${s.wrap}`}
         >
-          <span className="text-lg leading-none mt-0.5">{icons[block.variant]}</span>
-          <p className="text-sm leading-relaxed">{block.content}</p>
+          <span className={`text-base leading-none mt-0.5 ${s.icon}`}>
+            {CALLOUT_ICONS[block.variant]}
+          </span>
+          <p className={`text-sm leading-relaxed ${s.text}`}>
+            {block.content}
+          </p>
         </div>
       );
+    }
 
     case "list":
       return (
-        <ul key={idx} className="my-4 space-y-2">
+        <ul key={idx} className="my-4 space-y-2.5">
           {block.items.map((item, i) => (
-            <li key={i} className="flex items-start gap-2 text-zinc-300 text-sm leading-relaxed">
-              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
+            <li
+              key={i}
+              className="flex items-start gap-2.5 text-zinc-300 text-sm leading-relaxed"
+            >
+              <span className="mt-2 w-1 h-1 rounded-full bg-indigo-500/70 flex-shrink-0" />
               <span dangerouslySetInnerHTML={{ __html: item }} />
             </li>
           ))}
@@ -93,29 +127,40 @@ function renderBlock(block: ContentBlock, idx: number) {
   }
 }
 
-export default function DetailLayout({ section, sectionLabel, page }: Props) {
+export default function DetailLayout({
+  section,
+  sectionLabel,
+  page,
+}: Props) {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
+    <div className="mx-auto max-w-6xl px-6 pb-32">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-zinc-500 mb-10">
-        <Link href="/" className="hover:text-zinc-300 transition-colors">概要</Link>
-        <span>/</span>
-        <Link href={`/${section}`} className="hover:text-zinc-300 transition-colors">{sectionLabel}</Link>
-        <span>/</span>
-        <span className="text-zinc-300">{page.title}</span>
+      <nav className="flex items-center gap-2 text-xs text-zinc-600 pt-8 mb-12">
+        <Link href="/" className="hover:text-zinc-400 transition-colors">
+          概要
+        </Link>
+        <span className="text-zinc-700">/</span>
+        <Link
+          href={`/${section}`}
+          className="hover:text-zinc-400 transition-colors"
+        >
+          {sectionLabel}
+        </Link>
+        <span className="text-zinc-700">/</span>
+        <span className="text-zinc-400 truncate max-w-[200px]">{page.title}</span>
       </nav>
 
-      <div className="flex gap-12">
+      <div className="flex gap-14">
         {/* Sidebar TOC */}
-        <aside className="hidden xl:block w-56 flex-shrink-0">
+        <aside className="hidden xl:block w-52 flex-shrink-0">
           <div className="sticky top-24">
-            <p className="section-heading mb-4">このページの内容</p>
-            <nav className="flex flex-col gap-1">
+            <p className="section-heading mb-4">目次</p>
+            <nav className="flex flex-col gap-0.5">
               {page.sections.map((s) => (
                 <a
                   key={s.id}
                   href={`#${s.id}`}
-                  className="text-sm text-zinc-500 hover:text-zinc-200 py-1 pl-3 border-l border-zinc-800 hover:border-indigo-600 transition-colors truncate"
+                  className="text-[0.8125rem] text-zinc-600 hover:text-zinc-300 py-1.5 px-3 rounded-r-md border-l border-zinc-800/80 hover:border-indigo-500/50 hover:bg-indigo-500/[0.04] transition-all duration-150 truncate"
                 >
                   {s.heading}
                 </a>
@@ -124,39 +169,56 @@ export default function DetailLayout({ section, sectionLabel, page }: Props) {
           </div>
         </aside>
 
-        {/* Main content */}
+        {/* Article */}
         <article className="flex-1 min-w-0">
           {/* Header */}
           <header className="mb-12">
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-2 mb-5">
               {page.tags.map((tag) => (
-                <span key={tag} className="tag-pill">{tag}</span>
+                <span key={tag} className="tag-pill">
+                  {tag}
+                </span>
               ))}
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4 leading-tight">
               {page.title}
             </h1>
-            <p className="text-zinc-400 leading-relaxed text-base">{page.description}</p>
+            <p className="text-zinc-400 leading-relaxed max-w-prose">
+              {page.description}
+            </p>
+            <div className="divider mt-8" />
           </header>
 
           {/* Sections */}
-          {page.sections.map((section) => (
-            <section key={section.id} id={section.id} className="mb-16 scroll-mt-24">
-              <h2 className="text-xl font-bold text-white mb-6 pb-3 border-b border-zinc-800">
-                {section.heading}
+          {page.sections.map((sec) => (
+            <section key={sec.id} id={sec.id} className="mb-16 scroll-mt-24">
+              <h2 className="text-lg font-bold text-zinc-100 mb-5 flex items-center gap-3">
+                <span className="w-0.5 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500 flex-shrink-0" />
+                {sec.heading}
               </h2>
-              {section.blocks.map((block, idx) => renderBlock(block, idx))}
+              {sec.blocks.map((block, idx) => renderBlock(block, idx))}
             </section>
           ))}
 
-          {/* Navigation */}
-          <div className="mt-16 pt-8 border-t border-zinc-800 flex justify-between">
+          {/* Footer nav */}
+          <div className="divider mb-8" />
+          <div className="flex justify-between">
             <Link
               href={`/${section}`}
-              className="flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-200 transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
               {sectionLabel}一覧に戻る
             </Link>
