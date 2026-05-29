@@ -66,4 +66,18 @@ export type DigestItem = {
   description: string;
   tags: string[];
   coverImage?: ImageRef;
+  /** 一覧ページでのグループ分けに使うカテゴリ ID（任意） */
+  category?: string;
+};
+
+/** 一覧ページで記事をまとめるグループ */
+export type DigestGroup = {
+  id: string;
+  /** グループ見出し */
+  title: string;
+  /** グループの補足説明 */
+  description: string;
+  /** 見出し横のサポート絵文字（任意） */
+  icon?: string;
+  items: DigestItem[];
 };
