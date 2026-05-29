@@ -27,7 +27,7 @@ export const frontendItems: DigestItem[] = [
     description:
       "肥大化した App.tsx を domain / application / infrastructure / presentation の4層へ。Strategy パターンでスコアリングを差し替え可能にし、15以上の Zustand ストアで状態を分割した設計を解説する。",
     tags: ["アーキテクチャ", "Zustand", "DDD"],
-    coverImage: { src: "/app-base.png", alt: "TalkScope ベース画面" },
+    coverImage: { src: "/frontend/app-base.png", alt: "TalkScope ベース画面" },
     category: "system",
   },
   {
@@ -36,7 +36,7 @@ export const frontendItems: DigestItem[] = [
     description:
       "重要語の配置を2D物理シミュレーションで決定。浮力・求心力・反発力の3力を毎フレーム合成し、React を迂回した translate3d 直接書き換えで 60fps を維持する仕組みを深掘りする。",
     tags: ["物理シミュレーション", "requestAnimationFrame", "パフォーマンス"],
-    coverImage: { src: "/window-bubble.png", alt: "バブルクラウド" },
+    coverImage: { src: "/frontend/window-bubble.png", alt: "バブルクラウド" },
     category: "system",
   },
   {
@@ -45,7 +45,7 @@ export const frontendItems: DigestItem[] = [
     description:
       "バブルが増えすぎると視認性が落ちる。ソフト上限・デスロウ（5秒の猶予）・ハード上限の三段階で寿命を管理し、ピン留めを死守する個数ベース方式へ辿り着くまでの設計を公開する。",
     tags: ["状態管理", "UX", "アルゴリズム"],
-    coverImage: { src: "/app-bubble.png", alt: "バブルが表示された状態" },
+    coverImage: { src: "/frontend/app-bubble.png", alt: "バブルが表示された状態" },
     category: "system",
   },
   // ── UI/UX デザイン ──
@@ -55,7 +55,7 @@ export const frontendItems: DigestItem[] = [
     description:
       "VSCode / Unity 風のパネル自由配置を、Split / Leaf のバイナリツリーで表現。ドラッグでの分割・リサイズ・ドロップゾーン・フェーズ別レイアウト永続化の実装を解説する。",
     tags: ["レイアウト", "バイナリツリー", "Drag & Drop"],
-    coverImage: { src: "/app-fullcustom.png", alt: "フルカスタムレイアウト" },
+    coverImage: { src: "/frontend/app-fullcustom.png", alt: "フルカスタムレイアウト" },
     category: "ux",
   },
   {
@@ -64,7 +64,7 @@ export const frontendItems: DigestItem[] = [
     description:
       "「聴く」フェーズと「振り返る」フェーズを独立したシーンとして実装。IPhase インターフェース、フェーズ別レイアウトのロード、ピン中バブルのアーカイブ表示への切り替えを解説する。",
     tags: ["フェーズ設計", "UX", "状態遷移"],
-    coverImage: { src: "/app-ranking.png", alt: "ランキング表示（発表後フェーズ）" },
+    coverImage: { src: "/frontend/app-ranking.png", alt: "ランキング表示（発表後フェーズ）" },
     category: "ux",
   },
   {
@@ -73,7 +73,7 @@ export const frontendItems: DigestItem[] = [
     description:
       "マスターサイズ倍率・バブル倍率・文字サイズ・最大表示数・自動切替を、スライダーで自在に。localStorage と IndexedDB を使い分けた永続化と、操作を阻害しない設定 UI の設計を解説する。",
     tags: ["設定", "永続化", "UI"],
-    coverImage: { src: "/mainsetting.png", alt: "設定モーダル" },
+    coverImage: { src: "/frontend/mainsetting.png", alt: "設定モーダル" },
     category: "ux",
   },
 ];

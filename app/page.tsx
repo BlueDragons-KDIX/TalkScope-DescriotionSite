@@ -29,10 +29,10 @@ const features = [
 ];
 
 const windows = [
-  { src: "/window-transcription.png", label: "文字起こし", desc: "音声をリアルタイムにテキスト化" },
-  { src: "/window-bubble.png", label: "バブルクラウド", desc: "重要語を視覚的に浮かべる" },
-  { src: "/window-discription.png", label: "説明パネル", desc: "文脈に応じた意味を解説" },
-  { src: "/window-history.png", label: "検索履歴", desc: "閲覧した用語を一覧表示" },
+  { src: "/frontend/window-transcription.png", label: "文字起こし", desc: "音声をリアルタイムにテキスト化" },
+  { src: "/frontend/window-bubble.png", label: "バブルクラウド", desc: "重要語を視覚的に浮かべる" },
+  { src: "/frontend/window-discription.png", label: "説明パネル", desc: "文脈に応じた意味を解説" },
+  { src: "/frontend/window-history.png", label: "検索履歴", desc: "閲覧した用語を一覧表示" },
 ];
 
 const stack = [
@@ -94,7 +94,7 @@ export default function HomePage() {
           <div className="relative">
             <div className="absolute inset-x-8 inset-y-4 bg-[rgba(var(--accent-rgb),0.1)] blur-[70px] rounded-3xl pointer-events-none" />
             <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.75)]">
-              <Image src="/app-bubble.png" alt="TalkScope — バブルクラウド画面" width={1280} height={720} className="w-full h-auto" priority />
+              <Image src="/frontend/app-bubble.png" alt="TalkScope — バブルクラウド画面" width={1280} height={720} className="w-full h-auto" priority />
             </div>
           </div>
         </section>

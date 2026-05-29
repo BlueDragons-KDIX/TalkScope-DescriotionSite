@@ -16,8 +16,8 @@ const page: DetailPage = {
         {
           type: "images",
           images: [
-            { src: "/window-bubble.png", alt: "バブルウィンドウ", caption: "重要語がバブルとして浮かぶ" },
-            { src: "/app-bubble.png", alt: "バブルと文字起こしの同時表示", caption: "ハイライトとバブルが連動する" },
+            { src: "/frontend/window-bubble.png", alt: "バブルウィンドウ", caption: "重要語がバブルとして浮かぶ" },
+            { src: "/frontend/app-bubble.png", alt: "バブルと文字起こしの同時表示", caption: "ハイライトとバブルが連動する" },
           ],
           layout: "row",
         },

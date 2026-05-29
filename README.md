@@ -62,14 +62,14 @@ npm run dev
 
 ### 画像の追加
 
-`public/images/` に PNG/JPEG を配置し、コンテンツファイルで `src: "/images/xxx.png"` を指定してください。
+`public/frontend/` または `public/backend/` に PNG/JPEG を配置し、コンテンツファイルで `src: "/frontend/xxx.png"`（または `/backend/xxx.png`）を指定してください。
 
 ```typescript
 // content/frontend/xxx.ts の例
 {
   type: "image",
   image: {
-    src: "/images/new-screenshot.png",
+    src: "/frontend/new-screenshot.png",
     alt: "説明テキスト",
     caption: "キャプション（任意）",
   }
