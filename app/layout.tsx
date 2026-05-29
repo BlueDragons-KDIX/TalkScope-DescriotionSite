@@ -9,10 +9,9 @@ export const metadata: Metadata = {
     template: "%s | TalkScope",
   },
   description:
-    "音声をリアルタイムに文字起こしし、文脈上重要な専門語を抽出・スコアリングして強調する会話理解支援アプリ「TalkScope」の技術設計を、フロントエンド／バックエンドの両面から解説する。KC3Hack 2026 / チーム19 ブルードラゴンズ。",
+    "音声をリアルタイムに文字起こしし、文脈上重要な専門語を抽出・スコアリングして強調する会話理解支援アプリ「TalkScope」の技術設計を、フロントエンド／バックエンドの両面から解説する。青龍's（ブルードラゴンズ）。",
   keywords: [
     "TalkScope",
-    "KC3Hack",
     "会話理解",
     "NLP",
     "GiNZA",
@@ -20,7 +19,7 @@ export const metadata: Metadata = {
     "React",
     "クリーンアーキテクチャ",
   ],
-  authors: [{ name: "チーム19 ブルードラゴンズ" }],
+  authors: [{ name: "青龍's（ブルードラゴンズ）" }],
   openGraph: {
     title: "TalkScope — 技術解説サイト",
     description:

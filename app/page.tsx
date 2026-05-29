@@ -53,7 +53,8 @@ export default function HomePage() {
           <div className="max-w-3xl animate-fade-up">
             <div className="eyebrow mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-              KC3Hack 2026 — チーム19 ブルードラゴンズ
+              青龍&apos;s
+              <span className="text-zinc-500 font-normal">（ブルードラゴンズ）</span>
             </div>
 
             <h1

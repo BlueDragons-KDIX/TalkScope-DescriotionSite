@@ -47,8 +47,11 @@ export default function Nav() {
           <span className="font-bold tracking-[0.04em] text-sm text-zinc-100">
             TalkScope
           </span>
-          <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-widest uppercase tag-pill">
-            KC3Hack 2026
+          <span
+            className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide tag-pill"
+            title="ブルードラゴンズ"
+          >
+            青龍&apos;s
           </span>
         </Link>
 

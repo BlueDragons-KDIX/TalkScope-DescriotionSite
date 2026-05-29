@@ -66,8 +66,9 @@ export default function Footer() {
         <div className="divider my-8" />
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="text-xs text-zinc-600">
-            KC3Hack 2026 出展作品 — チーム19 ブルードラゴンズ
+          <p className="text-xs text-zinc-500">
+            青龍&apos;s
+            <span className="text-zinc-600">（ブルードラゴンズ）</span>
           </p>
           <p className="text-xs text-zinc-700 font-mono">
             Built with Next.js · Tailwind CSS
