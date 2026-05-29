@@ -69,12 +69,13 @@ const page: DetailPage = {
           ],
         },
         {
-          type: "list",
+          type: "cards",
+          columns: 2,
           items: [
-            "<strong>domain</strong>：<code>Term</code> や <code>Bubble</code> といったエンティティと、振る舞いを定義するインターフェース。React も fetch も知らない。",
-            "<strong>application</strong>：「文字起こしを開始する」「重要度を再計算する」などのユースケース。domain のインターフェース越しに処理を組み立てる。",
-            "<strong>infrastructure</strong>：Web Speech API、SSE、localStorage といった具体的な外界との接続。インターフェースの実装を提供する。",
-            "<strong>presentation</strong>：React コンポーネントとフック。状態は Zustand ストアから受け取り、描画に専念する。",
+            { title: "domain", tag: "中核", body: "<code>Term</code> や <code>Bubble</code> といったエンティティと、振る舞いを定義するインターフェース。React も fetch も知らない。" },
+            { title: "application", tag: "ユースケース", body: "「文字起こしを開始する」「重要度を再計算する」などの操作。domain のインターフェース越しに処理を組み立てる。" },
+            { title: "infrastructure", tag: "外界", body: "Web Speech API、SSE、localStorage といった具体的な外界との接続。インターフェースの実装を提供する。" },
+            { title: "presentation", tag: "描画", body: "React コンポーネントとフック。状態は Zustand ストアから受け取り、描画に専念する。" },
           ],
         },
       ],
@@ -128,11 +129,11 @@ export interface IImportanceStrategy {
             "<p>状態管理には <strong>Zustand 5</strong> を採用した。Redux のようなボイラープレートなしに、機能ごとに小さなストアへ分割できる。<code>bubbleStore</code>、<code>phaseStore</code>、<code>layoutStore</code>、<code>termMapWindowSettingsStore</code> など、関心ごとに 15 以上のストアへ切り分けている。</p>",
         },
         {
-          type: "list",
+          type: "cards",
           items: [
-            "Props のバケツリレーが消え、深いコンポーネントから必要な状態へ直接セレクタでアクセスできる",
-            "ストアが小さいため、購読の粒度を絞れて不要な再レンダリングを避けられる",
-            "React の外（物理ループや SSE ブリッジ）からも <code>store.getState()</code> で読み書きできる",
+            { title: "バケツリレーが消える", body: "深いコンポーネントからも、必要な状態へ直接セレクタでアクセスできる。" },
+            { title: "再描画を最小化", body: "ストアが小さいぶん購読の粒度を絞れ、不要な再レンダリングを避けられる。" },
+            { title: "React の外からも触れる", body: "物理ループや SSE ブリッジからも <code>store.getState()</code> で読み書きできる。" },
           ],
         },
         {

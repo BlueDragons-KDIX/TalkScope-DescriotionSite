@@ -104,12 +104,17 @@ const page: DetailPage = {
           },
         },
         {
-          type: "list",
+          type: "cards",
+          columns: 2,
           items: [
-            "<strong>spaCy ベクトル</strong>：Wikipedia などで学習された 300次元の意味表現",
-            "<strong>ハッシュベクトル</strong>：SHA256(word) をシードに生成する決定論的な正規化ベクトル（同じ語は常に同じ値）",
-            "ベクトル値は 6 桁に丸めて転送量を抑える",
+            { icon: "🎯", title: "spaCy ベクトル", tag: "理想", body: "Wikipedia などで学習された 300次元の意味表現。語の意味的な近さをそのまま捉える。" },
+            { icon: "#️⃣", title: "ハッシュベクトル", tag: "フォールバック", body: "SHA256(word) をシードに生成する決定論的な正規化ベクトル。同じ語は常に同じ値になる。" },
           ],
+        },
+        {
+          type: "text",
+          content:
+            "<p>どちらの場合も、ベクトル値は 6 桁に丸めて転送量を抑えている。</p>",
         },
         {
           type: "callout",

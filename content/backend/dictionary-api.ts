@@ -61,11 +61,11 @@ const page: DetailPage = {
           },
         },
         {
-          type: "list",
+          type: "cards",
           items: [
-            "<strong>source フィールド</strong>：その語義が DB 由来（<code>db</code>）か LLM 生成（<code>llm</code>）かを明示する",
-            "<strong>プロンプト粒度</strong>：1プロンプト分の語義が揃った時点で embedding まで済ませ、即 yield する",
-            "<strong>失敗は握りつぶさない</strong>：あるプロンプトの生成が失敗してもログに残して処理を継続し、他の語を巻き添えにしない",
+            { title: "source フィールド", body: "その語義が DB 由来（<code>db</code>）か LLM 生成（<code>llm</code>）かを明示する。" },
+            { title: "プロンプト粒度", body: "1プロンプト分の語義が揃った時点で embedding まで済ませ、即 yield する。" },
+            { title: "失敗は握りつぶさない", body: "あるプロンプトの生成が失敗してもログに残して継続し、他の語を巻き添えにしない。" },
           ],
         },
       ],

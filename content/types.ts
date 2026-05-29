@@ -20,6 +20,12 @@ export type ContentBlock =
   | { type: "callout"; variant: "info" | "tip" | "warning" | "note"; title?: string; content: string }
   // 箇条書き
   | { type: "list"; ordered?: boolean; items: string[] }
+  // 並列概念のカード列挙（3要素などをグラフィカルに見せる）
+  | {
+      type: "cards";
+      columns?: 2 | 3;
+      items: { icon?: string; title: string; body: string; tag?: string }[];
+    }
   // 指標カード（数値の強調）
   | { type: "stats"; items: { value: string; label: string; sub?: string }[] }
   // 手順 / パイプライン（番号付きのステップ）
