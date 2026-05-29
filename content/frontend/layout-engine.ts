@@ -4,185 +4,137 @@ const page: DetailPage = {
   slug: "layout-engine",
   title: "動的レイアウトエンジン",
   description:
-    "VSCode や Unity エディタのようなパネル自由配置を実現する自前のレイアウトエンジン。バイナリツリーで画面分割を表現し、D&D・リサイズ・プリセット・ウィンドウ追加削除をすべて同一の抽象で扱う。",
-  tags: ["レイアウト", "バイナリツリー", "DnD", "UX"],
+    "文字起こし・バブル・説明・履歴の各ウィンドウを、VSCode や Unity のように自由配置・リサイズできる。レイアウトを Split / Leaf のバイナリツリーで表現し、ドラッグでの分割・比率変更・ドロップゾーン・フェーズ別永続化を実装した仕組みを解説する。",
+  intro:
+    "発表のスタイルも画面サイズも人それぞれ。ならばレイアウトを固定せず、<strong>ユーザーが組み立てられる</strong>ようにしよう。その土台が、画面分割を再帰的な木構造で表すレイアウトエンジンだ。",
+  tags: ["レイアウト", "バイナリツリー", "Drag & Drop"],
   sections: [
     {
-      id: "overview",
-      heading: "なぜ自前実装したか",
+      id: "model",
+      heading: "レイアウトをバイナリツリーで表す",
       blocks: [
         {
-          type: "images",
-          images: [
-            {
-              src: "/app-base.png",
-              alt: "デフォルトレイアウト",
-              caption: "デフォルト：4分割レイアウト",
-            },
-            {
-              src: "/app-fullcustom.png",
-              alt: "フルカスタムレイアウト",
-              caption: "フルカスタム：バブル大・ランキング追加",
-            },
-          ],
-          layout: "row",
-        },
-        {
-          type: "text",
-          content: `<p>TalkScope のウィンドウシステムは「文字起こし・バブル・説明・履歴・ランキング」という異なる性質のパネルを、ユーザーが自由に並べ替えられる設計だ。</p>
-<p>既製の分割ライブラリは「決まった構造を前提にしたもの」が多く、今回の「任意の場所にドロップして分割する」要件には合わなかった。そのため <strong>バイナリツリーベースのレイアウトエンジンをゼロから実装</strong> した。</p>`,
-        },
-      ],
-    },
-    {
-      id: "binary-tree",
-      heading: "バイナリツリーによるレイアウト表現",
-      blocks: [
-        {
-          type: "text",
-          content: `<p>画面の分割状態は <strong>バイナリツリー</strong> で表現される。葉ノードがウィンドウ、中間ノードが縦または横方向の分割を表す。</p>`,
+          type: "lead",
+          content:
+            "任意の分割レイアウトは「分割（Split）」と「中身（Leaf）」の二種類のノードで木として表現できる。これは多くのタイリング型エディタが採るモデルだ。",
         },
         {
           type: "code",
           code: {
             lang: "TypeScript",
-            code: `// layout/types.ts
-export type PanelId =
-  | "transcription" | "bubbleCloud" | "detail"
-  | "history"       | "ranking";
+            title: "domain/entities/Layout.ts",
+            code: `export interface LeafNode {
+  type: 'leaf'
+  id: string
+  windowId: string   // どのウィンドウを表示するか
+}
 
-export type SplitNode = {
-  type: "split";
-  direction: "horizontal" | "vertical";
-  ratio: number;       // 0〜1。分割線の位置
-  first: LayoutNode;
-  second: LayoutNode;
-};
+export interface SplitNode {
+  type: 'split'
+  id: string
+  direction: 'h' | 'v' // h = 左右分割, v = 上下分割
+  ratio: number        // 最初の子(a)が占める割合 0〜1
+  a: LayoutNode
+  b: LayoutNode
+}
 
-export type LeafNode = {
-  type: "leaf";
-  panelId: PanelId;
-};
-
-export type LayoutNode = SplitNode | LeafNode;
-
-// 例：左右2分割。左にバブル、右に分割されたノード
-const layout: LayoutNode = {
-  type: "split",
-  direction: "horizontal",
-  ratio: 0.5,
-  first: { type: "leaf", panelId: "bubbleCloud" },
-  second: {
-    type: "split",
-    direction: "vertical",
-    ratio: 0.6,
-    first: { type: "leaf", panelId: "transcription" },
-    second: { type: "leaf", panelId: "detail" },
-  },
-};`,
+export type LayoutNode = LeafNode | SplitNode`,
           },
-        },
-        {
-          type: "text",
-          content: `<p>この表現の強みは<strong>再帰的に描画できること</strong>だ。<code>LayoutEngine</code> は <code>LayoutNode</code> を受け取り、<code>SplitNode</code> なら2子を並べて再帰、<code>LeafNode</code> なら対応するパネルコンポーネントを描画する。</p>`,
-        },
-        {
-          type: "code",
-          code: {
-            lang: "TypeScript（簡略）",
-            code: `// LayoutEngine.tsx — 再帰レンダリング
-function LayoutEngine({ node }: { node: LayoutNode }) {
-  if (node.type === "leaf") {
-    return <PanelRenderer panelId={node.panelId} />;
-  }
-  return (
-    <SplitContainer direction={node.direction} ratio={node.ratio}>
-      <LayoutEngine node={node.first} />
-      <LayoutEngine node={node.second} />
-    </SplitContainer>
-  );
-}`,
-          },
-        },
-      ],
-    },
-    {
-      id: "dnd",
-      heading: "ドラッグ＆ドロップで再配置",
-      blocks: [
-        {
-          type: "text",
-          content: `<p>パネルヘッダーをドラッグすると「上下左右」のドロップゾーンが出現し、ドロップした位置にツリーが更新される。</p>
-<p>ツリーの更新は <code>layoutUtils.ts</code> の純粋関数として実装されており、「ノードAをノードBの右に移動」のような操作を不変に（イミュータブルに）処理できる。React 側は新しいツリーを受け取って再レンダリングするだけだ。</p>`,
-        },
-      ],
-    },
-    {
-      id: "presets",
-      heading: "5種類のプリセットレイアウト",
-      blocks: [
-        {
-          type: "images",
-          images: [
-            {
-              src: "/app-ranking.png",
-              alt: "ランキングを表示したレイアウト",
-              caption: "ランキングウィンドウを追加したカスタムレイアウト",
-            },
-          ],
         },
         {
           type: "list",
           items: [
-            "<strong>デフォルト</strong>：文字起こし左・バブル中央・説明＋履歴右",
-            "<strong>左右</strong>：文字起こし左半分・バブル右半分（シンプル）",
-            "<strong>2×2</strong>：4パネルを均等に配置",
-            "<strong>横4列</strong>：横並び",
-            "<strong>縦4列</strong>：縦積み",
+            "<code>Leaf</code> は実際に描画するウィンドウ（<code>windowId</code>）を指す葉ノード",
+            "<code>Split</code> は領域を <code>direction</code> 方向に <code>ratio</code> で2分し、子 <code>a</code> / <code>b</code> を再帰的に持つ",
+            "どんなに複雑な配置も、Split を入れ子にすれば表現できる",
           ],
         },
         {
-          type: "text",
-          content: `<p>発表後フェーズではレイアウト変更ボタンは <strong>表示したまま disabled</strong> にする設計にした。削除してしまうとボタン数が変わり右側のUI全体がズレるためだ。こういった細かい UIの安定性への配慮も設計に織り込んでいる。</p>`,
+          type: "image",
+          image: { src: "/app-fullcustom.png", alt: "フルカスタムレイアウト", caption: "複数ウィンドウを自在に配置した状態" },
         },
       ],
     },
     {
-      id: "window-registry",
-      heading: "ウィンドウレジストリによる拡張性",
+      id: "resize",
+      heading: "ドラッグでの比率変更",
       blocks: [
         {
           type: "text",
-          content: `<p>従来は <code>PanelId</code> の switch 文でウィンドウを描画していた。これは種類追加のたびに <code>LayoutEngine</code> を変更する必要があり、開放閉鎖原則に違反する。</p>
-<p>そこで <code>IWindowDefinition</code> インターフェースと <strong>ウィンドウレジストリ</strong> を導入した。</p>`,
+          content:
+            "<p>分割の境界（ディバイダ）をドラッグすると、その Split ノードの <code>ratio</code> だけを更新する。ポインタの移動量をコンテナサイズで割って差分を求め、行き過ぎないよう範囲内に収める。木の他の部分には一切触れない。</p>",
         },
         {
-          type: "code",
-          code: {
-            lang: "TypeScript",
-            code: `// domain/interfaces/IWindowDefinition.ts
-interface IWindowDefinition {
-  id: string;
-  label: string;
-  component: React.ComponentType;
-}
-
-// presentation/windows/registry.ts
-// 新種別の追加はここに登録するだけ。LayoutEngine は変更不要。
-export const windowRegistry: Record<string, IWindowDefinition> = {
-  transcription: { id: "transcription", label: "文字起こし", component: TranscriptionWindow },
-  bubbleCloud:   { id: "bubbleCloud",   label: "バブル",     component: BubbleWindow },
-  detail:        { id: "detail",        label: "説明",       component: DetailWindow },
-  history:       { id: "history",       label: "履歴",       component: HistoryWindow },
-  ranking:       { id: "ranking",       label: "ランキング", component: RankingWindow },
-};`,
-          },
+          type: "steps",
+          items: [
+            { title: "ドラッグ開始", body: "<code>onMouseDown</code> で開始位置と現在の <code>ratio</code> を記録する。" },
+            { title: "移動量を比率に変換", body: "<code>delta = (現在位置 − 開始位置) / コンテナサイズ</code> を計算する。" },
+            { title: "ratio を更新", body: "<code>newRatio = startRatio + delta</code> を min/max でクランプし、対象 Split の <code>ratio</code> のみ書き換える。" },
+            { title: "再描画", body: "更新後の木から各ペインの幅・高さを算出して React が再描画する。" },
+          ],
         },
         {
           type: "callout",
           variant: "tip",
           content:
-            "新しいウィンドウを追加するのに必要な変更は registry.ts への1エントリ追加だけ。LayoutEngine も LayoutUseCase も触らなくていい。",
+            "更新対象は「ドラッグした Split の ratio」だけ。木の構造を不変に保ち、必要な一点のみ差し替えることで、巨大なレイアウトでも安定して動く。",
+        },
+      ],
+    },
+    {
+      id: "dnd",
+      heading: "ドロップゾーンによる再配置",
+      blocks: [
+        {
+          type: "text",
+          content:
+            "<p>ウィンドウのヘッダをドラッグすると、ドロップ先の候補として 4 方向のオーバーレイ（左・右・上・下）が現れる。どこに落とすかで、新しい Split をどちら向きに・どちら側へ挿入するかが決まる。</p>",
+        },
+        {
+          type: "code",
+          code: {
+            lang: "TypeScript",
+            title: "domain/entities/Layout.ts",
+            code: `export type DropZone = 'left' | 'right' | 'top' | 'bottom'
+
+// left/right → direction 'h' の Split を新規作成
+// top/bottom → direction 'v' の Split を新規作成
+// ドロップ側に応じて a / b のどちらへ既存ノードを置くかが決まる`,
+          },
+        },
+        {
+          type: "list",
+          items: [
+            "左右へのドロップは <code>direction: 'h'</code> の Split を生成",
+            "上下へのドロップは <code>direction: 'v'</code> の Split を生成",
+            "不要になったウィンドウは Leaf を木から外し、残った兄弟ノードで親 Split を置き換える（折りたたみ）",
+          ],
+        },
+      ],
+    },
+    {
+      id: "persist",
+      heading: "フェーズ別のレイアウト永続化",
+      blocks: [
+        {
+          type: "text",
+          content:
+            "<p>「発表中」と「発表後」では最適な配置が異なる。そこでレイアウトは <strong>フェーズ ID をキーに</strong>保存・復元する。<code>LayoutRepository</code> が localStorage への入出力を担い、フェーズ遷移時に対応するレイアウトをロードする。</p>",
+        },
+        {
+          type: "specs",
+          items: [
+            { term: "保存先", value: "localStorage（<code>LayoutRepository</code> 経由）" },
+            { term: "キー", value: "フェーズ ID 単位" },
+            { term: "ロード契機", value: "フェーズ遷移時に対応レイアウトを復元" },
+            { term: "初期値", value: "用途別のプリセットテンプレートを用意" },
+          ],
+        },
+        {
+          type: "callout",
+          variant: "info",
+          content:
+            "「発表中はバブルを大きく」「発表後はランキングと履歴を中心に」といったプリセットを起点に、ユーザーが自分好みへ調整したものがフェーズごとに記憶される。",
         },
       ],
     },

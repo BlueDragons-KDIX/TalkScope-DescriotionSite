@@ -4,142 +4,97 @@ const page: DetailPage = {
   slug: "phase-system",
   title: "フェーズシステム（発表中 / 発表後）",
   description:
-    "同じアプリで「発表を聴く」フェーズと「内容を振り返る」フェーズを独立したシーンとして実装。遷移ボタンのUX、アクセントカラーの自動補色切替、レイアウト引き継ぎの設計を解説する。",
-  tags: ["フェーズ設計", "UX", "ADR", "アクセントカラー"],
+    "「会話を聴く」時間と「振り返る」時間は、求められる UI が根本的に違う。両者を during / after の独立したフェーズとして実装し、IPhase インターフェース・フェーズ別レイアウト・ピン中バブルのアーカイブ表示への切り替えで、一つのアプリに二つの体験を同居させた設計を解説する。",
+  intro:
+    "発表を聴いている最中は、流れるバブルにリアルタイムで反応したい。終わったあとは、何が重要だったかを腰を据えて振り返りたい。この<strong>モードの違い</strong>を場当たりの分岐ではなく、フェーズという第一級の概念として扱った。",
+  tags: ["フェーズ設計", "UX", "状態遷移"],
   sections: [
     {
-      id: "motivation",
-      heading: "なぜ2つのフェーズが必要か",
+      id: "two-phases",
+      heading: "2つのフェーズ",
       blocks: [
+        {
+          type: "lead",
+          content:
+            "TalkScope は内部に during（発表中）と after（発表後）の 2 フェーズを持ち、いまどちらにいるかで画面の構成要素も振る舞いも切り替わる。",
+        },
+        {
+          type: "table",
+          caption: "フェーズごとの振る舞いの違い",
+          head: ["観点", "during（発表中）", "after（発表後）"],
+          rows: [
+            ["録音", "アクティブ。逐次文字起こし", "停止。アーカイブ表示"],
+            ["バブル", "リアルタイムに生成・消滅", "ピン留め語を中心に静的表示"],
+            ["主役の画面", "バブル中心のレイアウト", "ランキング・履歴・要約"],
+            ["操作", "瞬間的な反応（ホバー/クリック）", "じっくり再アクセス"],
+          ],
+        },
         {
           type: "images",
           images: [
-            {
-              src: "/app-bubble.png",
-              alt: "発表中フェーズ",
-              caption: "発表中：音声認識とバブルがリアルタイムで動作",
-            },
-            {
-              src: "/app-ranking.png",
-              alt: "発表後フェーズ（ランキング）",
-              caption: "発表後：重要語ランキングで振り返り",
-            },
+            { src: "/app-bubble.png", alt: "発表中フェーズ", caption: "発表中：バブルが流れる" },
+            { src: "/app-ranking.png", alt: "発表後フェーズ", caption: "発表後：重要語ランキング" },
           ],
           layout: "row",
         },
-        {
-          type: "text",
-          content: `<p>最初の TalkScope は「発表を聴いている最中」だけを想定していた。しかし実際の使用シーンを考えると、発表が終わった後に「どの単語が重要だったか」を振り返りたいというニーズがある。</p>
-<p>タブやモーダルで切り替えるアプローチも検討したが、それではレイアウトが共有されてしまい、フェーズごとに最適な画面配置ができない。そこで <strong>フェーズを独立したシーンとして実装</strong> した。</p>`,
-        },
       ],
     },
     {
-      id: "design",
-      heading: "フェーズの設計",
-      blocks: [
-        {
-          type: "code",
-          code: {
-            lang: "TypeScript",
-            code: `// domain/interfaces/IPhase.ts
-interface IPhase {
-  id: "during" | "after";
-  name: string;
-  defaultLayout: LayoutNode;  // フェーズごとに異なるデフォルトレイアウト
-  onEnter?: () => void;
-  onExit?: () => void;
-}
-
-// stores/phaseStore.ts
-const usePhaseStore = create<PhaseStore>((set) => ({
-  phase: "during",
-  setPhase: (phase) => set({ phase }),
-}));
-
-// presentation/App.tsx
-// App は「現在のフェーズに応じたシーンを描画するだけ」
-const phase = usePhaseStore(s => s.phase);
-return phase === "during" ? <DuringScene /> : <AfterScene />;`,
-          },
-        },
-        {
-          type: "text",
-          content: `<p>発表後フェーズでは <strong>ランキングウィンドウ</strong> が前面に表示される。重要語を出現頻度順にランク付けして一覧表示し、各単語をクリックすると説明パネルに遷移できる。</p>`,
-        },
-      ],
-    },
-    {
-      id: "button-ux",
-      heading: "遷移ボタンのUX設計",
+      id: "iphase",
+      heading: "IPhase ── フェーズを抽象化する",
       blocks: [
         {
           type: "text",
-          content: `<p>発表中⇔発表後の切り替えボタンは <strong>同一 DOM ボタン</strong> で実装されている。「削除して別のボタンに差し替え」ではなく、色・文言・アイコン・ハンドラだけが変わる。</p>`,
+          content:
+            "<p>フェーズは domain の <code>IPhase</code> インターフェースで抽象化され、<code>DuringPresentation</code> / <code>AfterPresentation</code> がそれぞれシーンとして実装する。現在のフェーズは <code>phaseStore</code> が <code>currentPhaseId</code> として保持し、<code>transitionTo()</code> で遷移する。</p>",
         },
         {
           type: "code",
           code: {
             lang: "TypeScript",
-            code: `// PresentationAppHeader.tsx
-<button
-  style={{ width: "12.5rem" }}  // 幅を固定してフェーズ切替でレイアウトがズレないように
-  className={phase === "during"
-    ? "bg-rose-600 hover:bg-rose-700 text-white"      // 発表終了ボタン（ローズ）
-    : "bg-emerald-600 hover:bg-emerald-700 text-white" // もどるボタン（エメラルド）
-  }
-  onClick={phase === "during" ? handleEndPresentation : handleBackToDuring}
->
-  {phase === "during" ? "発表終了" : "もどる"}
-</button>`,
+            title: "stores/phaseStore.ts（要約）",
+            code: `const usePhaseStore = create<PhaseState>((set) => ({
+  currentPhaseId: 'during',
+  transitionTo: (phaseId: string) => set({ currentPhaseId: phaseId }),
+}))`,
           },
+        },
+        {
+          type: "decision",
+          context:
+            "発表中と発表後で UI が大きく異なる。これを一枚の画面の <code>if</code> 分岐で書くと、両モードの関心が絡み合い、片方の変更が他方を壊す。",
+          choice:
+            "フェーズを <code>IPhase</code> として抽象化し、<code>DuringPresentation</code> / <code>AfterPresentation</code> を独立したシーンとして実装。フェーズ遷移を明示的な状態遷移として扱う。",
+          because: [
+            "各フェーズのコンポーネントが自分の関心だけを持ち、互いに干渉しない",
+            "新しいフェーズ（例：準備中・休憩）を足すときも、既存フェーズに手を入れずに済む",
+            "「いまどのモードか」がストアの一点に集約され、デバッグしやすい",
+          ],
+        },
+      ],
+    },
+    {
+      id: "handoff",
+      heading: "フェーズ間の引き継ぎ",
+      blocks: [
+        {
+          type: "text",
+          content:
+            "<p>フェーズが切り替わっても、ユーザーの文脈は途切れさせたくない。レイアウトはフェーズ ID をキーに保存されており（レイアウトエンジン参照）、遷移時に対応するレイアウトがロードされる。ピン留めした重要語は <code>after</code> フェーズのランキング・履歴へ自然に引き継がれる。</p>",
+        },
+        {
+          type: "list",
+          items: [
+            "レイアウトはフェーズごとに永続化され、遷移時に <code>loadLayout(phaseId)</code> で復元される",
+            "ピン留め語（<code>pinnedTermIds</code>）はフェーズをまたいで保持され、発表後の振り返りの起点になる",
+            "発表後はバブルのカテゴリフィルタに「ピン中」が現れ、保存した語だけを俯瞰できる",
+          ],
         },
         {
           type: "callout",
           variant: "info",
           content:
-            "ボタン幅を固定する理由：「発表終了」と「もどる」で文字数が異なるため、可変幅だとフェーズ切替のたびに右側のボタン列全体がズレる。ユーザーがクリックしようとしたボタンが動いてしまう不快な体験を防ぐ。",
-        },
-      ],
-    },
-    {
-      id: "accent-color",
-      heading: "発表後のアクセントカラー自動補色切替",
-      blocks: [
-        {
-          type: "text",
-          content: `<p>発表中と発表後を視覚的に明確に区別するため、<strong>発表後フェーズではアクセントカラーを自動的に補色に近いカラーへ切り替える</strong>。</p>
-<p>ユーザーの設定値（例: blue）は変更しない。表示時だけ <code>getOppositeThemeColor()</code> でパレット上の反対側のキー（例: orange）にマッピングする。</p>`,
-        },
-        {
-          type: "code",
-          code: {
-            lang: "TypeScript",
-            code: `// presentation/utils/oppositeThemeColor.ts
-const oppositeMap: Record<ThemeColor, ThemeColor> = {
-  blue:    "orange",
-  indigo:  "rose",
-  purple:  "emerald",
-  rose:    "indigo",
-  emerald: "purple",
-  orange:  "blue",
-};
-
-export function getOppositeThemeColor(color: ThemeColor): ThemeColor {
-  return oppositeMap[color];
-}
-
-// 使用側
-const displayColor = phase === "after"
-  ? getOppositeThemeColor(settings.themeColor)
-  : settings.themeColor;`,
-          },
-        },
-        {
-          type: "callout",
-          variant: "tip",
-          content:
-            "設定値（themeColor）は不変。マッピングは純粋関数で表示時にのみ適用される。設定モーダルを開いても選択済みの色はユーザーが設定した値のまま表示される。",
+            "「聴く」から「振り返る」への移行が、データの作り直しではなく視点の切り替えとして起きる。同じ会話データを、二つのフェーズが別の角度から見せている。",
         },
       ],
     },
