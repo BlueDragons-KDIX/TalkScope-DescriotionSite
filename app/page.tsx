@@ -67,11 +67,13 @@ export default function HomePage() {
             <p className="text-xl sm:text-2xl text-zinc-200 max-w-xl leading-snug mb-4 font-light text-balance">
               専門的な会話の理解を、リアルタイムで支援する Web アプリケーション。
             </p>
-            <p className="text-sm text-zinc-500 max-w-xl leading-relaxed mb-9">
-              音声を文字起こしし、NLP で文脈上重要な語を抽出・スコアリングして強調表示。
-              ワンクリックで意味を確認できる導線が、難解な会話の理解を追いかけます。
-              この技術解説サイトは、その設計と実装を深掘りします。
-            </p>
+            <div className="surface-panel px-5 py-4 max-w-xl mb-9">
+              <p className="text-sm text-zinc-300 leading-relaxed">
+                音声を文字起こしし、NLP で文脈上重要な語を抽出・スコアリングして強調表示。
+                ワンクリックで意味を確認できる導線が、難解な会話の理解を追いかけます。
+                この技術解説サイトは、その設計と実装を深掘りします。
+              </p>
+            </div>
 
             <div className="flex flex-wrap gap-3">
               <Link href="/frontend" className="btn-primary group">
@@ -103,7 +105,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-white mb-3 tracking-tight text-balance">
             専門的な会話で生まれる、3つの理解の壁
           </h2>
-          <p className="text-zinc-500 mb-10 max-w-xl leading-relaxed text-sm">
+          <p className="surface-panel px-5 py-4 text-zinc-300 mb-10 max-w-xl leading-relaxed text-sm">
             技術発表、学術的な議論、業界用語が飛び交う商談。専門的な場で生まれる理解の壁を、TalkScope は三方向から取り除きます。
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -126,7 +128,7 @@ export default function HomePage() {
         <section className="mb-32">
           <p className="kicker mb-4">How it works</p>
           <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">声が、理解に変わるまで</h2>
-          <p className="text-zinc-500 mb-10 max-w-xl text-sm leading-relaxed">
+          <p className="surface-panel px-5 py-4 text-zinc-300 mb-10 max-w-xl text-sm leading-relaxed">
             録音から意味確認まで、5つの段が一本のパイプラインとして連携します。フロントとバックエンドが役割を分担し、リアルタイム性と解析精度を両立させています。
           </p>
           <div className="relative">
@@ -151,7 +153,7 @@ export default function HomePage() {
                   <h3 className="text-lg sm:text-xl font-bold text-zinc-50 tracking-tight mb-2.5">
                     {f.step}
                   </h3>
-                  <p className="text-[0.8rem] text-zinc-500 leading-relaxed max-w-[13rem]">{f.desc}</p>
+                  <p className="surface-panel px-3 py-2.5 text-[0.8rem] text-zinc-300 leading-relaxed max-w-[13rem]">{f.desc}</p>
                   {/* 次工程への矢印 */}
                   {i < flow.length - 1 && (
                     <span className="hidden lg:grid place-items-center absolute top-12 right-0 translate-x-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full bg-ink-surface border border-[rgba(var(--accent-rgb),0.4)] text-accent">
@@ -189,7 +191,7 @@ export default function HomePage() {
         <section className="mb-32">
           <p className="kicker mb-4">Workspace</p>
           <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">独立したウィンドウを、自由に配置</h2>
-          <p className="text-zinc-500 mb-10 max-w-xl text-sm leading-relaxed">
+          <p className="surface-panel px-5 py-4 text-zinc-300 mb-10 max-w-xl text-sm leading-relaxed">
             各ウィンドウは独立して動作し、ドラッグ＆ドロップで自由に配置・リサイズできます。発表スタイルや画面サイズに合わせて最適なレイアウトを構築できます。
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -218,7 +220,7 @@ export default function HomePage() {
         <section className="mb-32">
           <p className="kicker mb-4">Deep Dive</p>
           <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">実装のこだわりを、2方向から</h2>
-          <p className="text-zinc-500 mb-10 max-w-xl text-sm leading-relaxed">
+          <p className="surface-panel px-5 py-4 text-zinc-300 mb-10 max-w-xl text-sm leading-relaxed">
             アーキテクチャの設計判断から物理エンジン、スコアリングアルゴリズムまで。フロントとバックエンドそれぞれの記事を公開しています。
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -257,10 +259,12 @@ export default function HomePage() {
         <section>
           <p className="kicker mb-4">Tech Stack</p>
           <h2 className="text-3xl font-bold text-white mb-8 tracking-tight">使用技術</h2>
-          <div className="flex flex-wrap gap-2">
-            {stack.map((t) => (
-              <span key={t} className="tag-plain font-mono">{t}</span>
-            ))}
+          <div className="surface-panel p-5">
+            <div className="flex flex-wrap gap-2">
+              {stack.map((t) => (
+                <span key={t} className="tag-plain font-mono">{t}</span>
+              ))}
+            </div>
           </div>
         </section>
       </div>
