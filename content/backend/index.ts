@@ -3,7 +3,7 @@ import type { DigestItem } from "@/content/types";
 export const backendDigest = {
   title: "バックエンド設計",
   description:
-    "Python + FastAPI で構築した TalkScope のバックエンド。日本語解析、ベクトル化、DB 先行の辞書参照、Gemini による未知語補完、SSE による逐次返却、用語スコア API までを担う。実装済みの仕組みと、今後拡張する余地を分けながら解説する。",
+    "Python + FastAPI で構築した TalkScope のバックエンド。最も重視したのはレイテンシで、SSE、DB / Gemini のバッチ処理、非同期並列、リージョン近接によって待ち時間を体感上短くした。その上で、日本語解析と文脈ベクトルを用いたスコア計算を組み合わせている。",
 };
 
 export const backendStack = [
@@ -21,6 +21,13 @@ export const backendStack = [
 
 export const backendItems: DigestItem[] = [
   {
+    slug: "dictionary-api",
+    title: "レイテンシ改善と SSE ストリーミング",
+    description:
+      "DB ヒットを先に返し、未知語は Gemini の完了順に流す。DB / Gemini のバッチ処理、I/O 待ち中の非同期並列、Gemini timeout、Cloud Run と DB のリージョン近接など、UX を守るためのレイテンシ対策を解説する。",
+    tags: ["レイテンシ", "SSE", "Gemini"],
+  },
+  {
     slug: "architecture",
     title: "バックエンド全体設計",
     description:
@@ -31,21 +38,14 @@ export const backendItems: DigestItem[] = [
     slug: "nlp-pipeline",
     title: "NLP パイプライン",
     description:
-      "テキストが届いてからスコア付き用語が返るまで。形態素解析、複合名詞の結合、辞書検索用語の正規化、文脈ベクトル化、DB / Gemini 参照へ渡すまでの実装済みステップを追う。",
+      "形態素解析で得られた全名詞をそのまま返すのではなく、複合名詞の結合、1文字語や一般語の除外、ブラックリストによって必要な情報へ絞る。無駄な計算とリクエストを減らすための NLP 前処理を追う。",
     tags: ["形態素解析", "GiNZA", "ベクトル化"],
   },
   {
     slug: "scoring-algorithm",
     title: "用語スコアリングアルゴリズム",
     description:
-      "バブルサイズの根拠になる用語スコア。現行 API は出現回数の素点、IDF バフ、必要に応じたテーマ類似バフを加算して返す。テーマ EMA は実装済みだが既定では無効で、運用時に明示して使う設計になっている。",
+      "リクエストテキストと出現単語のベクトル類似度を使い、文脈に沿った単語へ高いスコアを与える。IT 用語で文脈ベクトルを補正する工夫と、明確な重要度指標を置く難しさを解説する。",
     tags: ["IDF", "EMA", "コサイン類似度"],
-  },
-  {
-    slug: "dictionary-api",
-    title: "辞書 API と SSE ストリーミング",
-    description:
-      "DB ヒット語を先に、未知語は Gemini が生成した意味候補を後から流す SSE 設計。生成結果のベクトル化、DB 蓄積、プロンプト単位の逐次返却を解説する。",
-    tags: ["Gemini", "SSE", "辞書"],
   },
 ];

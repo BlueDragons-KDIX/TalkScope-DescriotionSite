@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import type { DigestItem, DigestGroup } from "@/content/types";
 
 type Props = {
@@ -10,6 +11,8 @@ type Props = {
   stack?: string[];
   /** 指定すると記事をグループ見出し付きで分類表示する */
   groups?: DigestGroup[];
+  /** ヒーロー直下に置く、セクション固有の導線 */
+  introSlot?: ReactNode;
 };
 
 function DigestCard({
@@ -80,6 +83,7 @@ export default function DigestLayout({
   items,
   stack,
   groups,
+  introSlot,
 }: Props) {
   const label = section === "frontend" ? "Frontend" : "Backend";
 
@@ -116,6 +120,8 @@ export default function DigestLayout({
         </div>
         <div className="divider mt-12" />
       </header>
+
+      {introSlot && <div className="mb-12">{introSlot}</div>}
 
       {/* Cards */}
       {groups && groups.length > 0 ? (
