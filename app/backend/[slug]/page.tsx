@@ -9,6 +9,7 @@ const contentMap: Record<string, () => Promise<{ default: DetailPage }>> = {
   "nlp-pipeline":      () => import("@/content/backend/nlp-pipeline"),
   "scoring-algorithm": () => import("@/content/backend/scoring-algorithm"),
   "dictionary-api":    () => import("@/content/backend/dictionary-api"),
+  "optimizations":     () => import("@/content/backend/optimizations"),
 };
 
 type Props = { params: Promise<{ slug: string }> };
