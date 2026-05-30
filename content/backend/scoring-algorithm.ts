@@ -126,7 +126,7 @@ weight = 4 * x * (1 - x)    # 中点 x=0.5（count=50）で最大 1.0
           type: "callout",
           variant: "tip",
           content:
-            "この素点は <code>occurrence_count</code> が送られたときだけ使う。省略された場合は <code>base=0</code> になり、IDF やテーマ類似などのバフだけで final を作る。",
+            "この素点は occurrence_count が送られたときだけ使う。省略された場合は base=0 になり、IDF やテーマ類似などのバフだけで final を作る。",
         },
       ],
     },
