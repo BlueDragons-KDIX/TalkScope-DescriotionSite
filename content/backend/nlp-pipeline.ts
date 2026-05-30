@@ -4,7 +4,7 @@ const page: DetailPage = {
   slug: "nlp-pipeline",
   title: "NLP パイプライン",
   description:
-    "一文のテキストが届いてから、スコア付きの重要語が返るまで。文ベクトル化と探索対象抽出を並列に走らせ、複合名詞を結合し、品詞でふるいにかけ、300次元へベクトル化する。各段にフォールバックを備えた処理の全体像を追う。",
+    "一文のテキストが届いてから、スコア付きの用語が返るまで。文脈ベクトル化と探索対象抽出を並行して走らせ、複合名詞を結合し、DB / Gemini / スコア計算へつなぐ実装済みの流れを追う。",
   intro:
     "ユーザーが話すたび、短いテキストがバックエンドへ届く。そこから「どの語が重要か」を判断するには、いくつもの段を通す必要がある。ここではその一連の流れを、入口から出口まで順に見ていく。",
   tags: ["形態素解析", "GiNZA", "ベクトル化"],
@@ -16,16 +16,16 @@ const page: DetailPage = {
         {
           type: "lead",
           content:
-            "パイプラインは大きく「文をベクトルにする」流れと「語を取り出してスコアを付ける」流れが並走し、最後に合流して結果を返す。",
+            "SSE で返す辞書スコアのパイプラインは、「文脈ベクトルを作る流れ」と「検索対象の語を取り出す流れ」が並行し、DB / LLM の結果をスコア計算へ渡して順次返す。",
         },
         {
           type: "steps",
           items: [
-            { title: "文ベクトル化（並列）", body: "文全体を1本の 300次元ベクトルへ。会話のテーマ把握に使う。" },
-            { title: "探索対象の抽出（並列）", body: "形態素解析で名詞などを取り出し、複合名詞を結合する（例：「機械」+「学習」→「機械学習」）。" },
-            { title: "辞書のバッチ参照", body: "抽出語をまとめて DB に問い合わせ、ヒットした語の語義候補を得る。" },
-            { title: "文脈に合う語義の選択", body: "文ベクトルと各語義ベクトルの類似度から、最適な語義を選ぶ（best-sense）。" },
-            { title: "スコアリングして返す", body: "出現回数・テーマ類似度・IDF からスコアを算出し、結果を順次返す。" },
+            { title: "文脈ベクトル化（並行）", body: "入力テキストを embedding し、辞書候補との類似度スコアに使う。" },
+            { title: "探索対象の抽出", body: "形態素解析で連続する名詞を取り出し、複合語として結合する（例：「機械」+「学習」→「機械学習」）。" },
+            { title: "検索語の正規化", body: "重複を取り、1文字語とブラックリスト語を除外して DB 検索用の語リストを作る。" },
+            { title: "DB / Gemini 参照", body: "DB ヒットは先に返し、ミスした語だけ Gemini に意味候補生成を依頼する。" },
+            { title: "スコアリングして SSE で返す", body: "語義ベクトルと文脈ベクトルの類似度を使い、完了したまとまりから順次返す。" },
           ],
         },
       ],
@@ -37,7 +37,7 @@ const page: DetailPage = {
         {
           type: "text",
           content:
-            "<p>まず文を形態素に分解する。理想は <strong>Sudachi</strong> による解析で、表層形・基本形・品詞・文字オフセットを得る。Sudachi が使えない環境では、正規表現でアルファベット・数字・かな漢字の塊に分割し、品詞をヒューリスティックに推定する代替へ切り替わる。</p>",
+            "<p>まず文を形態素に分解する。<code>text_analysis.py</code> は SudachiPy が使える場合は Sudachi の結果を使い、表層形・基本形・品詞・文字オフセットを得る。辞書参照では、その中から連続する名詞をまとめて複合語として扱う。</p>",
         },
         {
           type: "code",
@@ -45,8 +45,8 @@ const page: DetailPage = {
             lang: "Python",
             title: "形態素の出力イメージ",
             code: `[
-  {"surface": "機械", "base_form": "機械", "pos": "NOUN", "start": 0, "end": 2},
-  {"surface": "学習", "base_form": "学習", "pos": "NOUN", "start": 2, "end": 4},
+  {"surface": "機械", "base_form": "機械", "pos": "名詞", "start": 0, "end": 2},
+  {"surface": "学習", "base_form": "学習", "pos": "名詞", "start": 2, "end": 4},
 ]
 # 連続する名詞は結合され "機械学習" として1語に扱われる`,
           },
@@ -66,40 +66,43 @@ const page: DetailPage = {
         {
           type: "text",
           content:
-            "<p>助詞や記号をバブルにしても邪魔なだけだ。スコアリングの対象は<strong>内容語</strong>に絞る。名詞・固有名詞・動詞・形容詞・英単語・数値などを通し、接続詞・助詞・助動詞・記号などは落とす。</p>",
+            "<p>辞書検索の入口では名詞を中心に扱う。SSE 用の辞書参照では連続名詞を結合したうえで、1文字語とブラックリスト語を除外する。別系統の <code>/analysis/vectorize</code> では、名詞・動詞・形容詞などの内容語をベクトル化できる。</p>",
         },
         {
           type: "table",
-          caption: "品詞フィルタ",
-          head: ["扱い", "対象品詞"],
+          caption: "現行パイプラインでのフィルタ",
+          head: ["処理", "対象"],
           rows: [
-            ["通す（内容語）", "NOUN / PROPN / VERB / ADJ / ALPHA / NUM（名詞・動詞・形容詞・形状詞）"],
-            ["落とす（機能語）", "CCONJ / SCONJ / PART / AUX / PUNCT（接続詞・助詞・助動詞・記号）"],
+            ["辞書参照 SSE", "連続する名詞を複合語化し、1文字語・ブラックリスト語を除外"],
+            ["ベクトル化 API", "名詞・動詞・形容詞などを通し、助詞・助動詞・記号などを除外"],
+            ["用語スコア API", "名詞系を対象にし、代名詞と1文字表層を除外"],
           ],
         },
       ],
     },
     {
       id: "vectorize",
-      heading: "300次元へのベクトル化と OOV フォールバック",
+      heading: "ベクトル化とフォールバック",
       blocks: [
         {
           type: "text",
           content:
-            "<p>残った語を 300 次元のベクトルへ変換する。第一候補は spaCy / GiNZA の学習済みベクトル。語彙に無い語（OOV）はスパンベクトルや構成トークンの平均で補い、それでも得られなければ <strong>SHA256 由来のハッシュベクトル</strong>へ落ちる。出力には <code>vector_source</code>（<code>spacy</code> か <code>hash</code> か）が必ず付く。</p>",
+            "<p>文や語義は spaCy / GiNZA のベクトルを優先して embedding する。文章ベクトル化では <code>spacy_doc</code>、<code>spacy_token_avg</code>、<code>content_token_avg</code>、<code>hash</code> の順に利用できるものを選ぶ。モデルが無い環境でも、決定論的なハッシュベクトルで API の形を保つ。</p>",
         },
         {
           type: "code",
           code: {
             lang: "Python",
-            title: "vectorize 応答の例（/analysis/vectorize）",
+            title: "sentence vectorize 応答の例（/analysis/vectorize/sentence）",
             code: `{
-  "text": "自然言語処理",
-  "meta": {"model": "ja_ginza", "vector_dim": 300, "output_token_count": 3},
-  "tokens": [
-    {"surface": "自然", "base_form": "自然", "pos": "NOUN",
-     "vector": [...], "vector_source": "spacy"}
-  ]
+  "text": "自然言語処理を学ぶ",
+  "meta": {
+    "model": "ginza",
+    "vector_dim": 300,
+    "vector_source": "spacy_doc",
+    "normalize": true
+  },
+  "sentence_vector": [...]
 }`,
           },
         },
@@ -107,14 +110,14 @@ const page: DetailPage = {
           type: "cards",
           columns: 2,
           items: [
-            { icon: "🎯", title: "spaCy ベクトル", tag: "理想", body: "Wikipedia などで学習された 300次元の意味表現。語の意味的な近さをそのまま捉える。" },
-            { icon: "#️⃣", title: "ハッシュベクトル", tag: "フォールバック", body: "SHA256(word) をシードに生成する決定論的な正規化ベクトル。同じ語は常に同じ値になる。" },
+            { title: "spaCy / GiNZA", tag: "優先", body: "利用できる場合は、文全体またはトークン平均のベクトルを使う。" },
+            { title: "ハッシュベクトル", tag: "代替", body: "SHA256 を元にした決定論的なベクトル。同じ入力は常に同じ値になる。" },
           ],
         },
         {
           type: "text",
           content:
-            "<p>どちらの場合も、ベクトル値は 6 桁に丸めて転送量を抑えている。</p>",
+            "<p>辞書参照 v1 では、入力文の embedding と生成・保存済み語義の embedding を使ってスコア計算へ渡す。embedding に失敗した場合は空ベクトルを返し、処理全体は継続する。</p>",
         },
         {
           type: "callout",

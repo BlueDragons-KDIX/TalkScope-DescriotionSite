@@ -4,7 +4,7 @@ const page: DetailPage = {
   slug: "dictionary-api",
   title: "辞書 API ── DB 先行 × Gemini 補完 × SSE",
   description:
-    "抽出した語の意味をどう返すか。まず DB をバッチで引き、ヒットしなかった語だけ Gemini に語義生成を依頼する。生成結果はその場でベクトル化して保存し、SSE でプロンプト完了ごとに逐次返す。DB は速く、LLM は重い——その非対称を素直に設計へ落とし込んだ辞書パイプラインを追う。",
+    "抽出した語の意味をどう返すか。まず DB をバッチで引き、ヒットしなかった語だけ Gemini に意味候補生成を依頼する。生成結果はその場でベクトル化し、SSE でプロンプト完了ごとに逐次返す。DB は速く、LLM は重いという非対称を素直に設計へ落とし込んだ辞書パイプラインを追う。",
   intro:
     "辞書参照は「速さ」と「網羅性」の綱引きだ。DB にある語は一瞬で返せるが、未知語は LLM で生成するしかなく時間がかかる。そこで<strong>速い答えは即返し、重い生成は待たせない</strong>よう、ストリーミングで段階的に結果を届ける設計にした。",
   tags: ["Gemini", "SSE", "辞書"],
@@ -21,7 +21,7 @@ const page: DetailPage = {
         {
           type: "steps",
           items: [
-            { title: "文ベクトル化（並行）", body: "入力テキストの embedding を先に走らせ、後段の best-sense 選択に備える。" },
+            { title: "文ベクトル化（並行）", body: "入力テキストの embedding を先に走らせ、後段の類似度スコア計算に備える。" },
             { title: "検索対象の抽出 → dedup", body: "形態素解析で名詞などを抽出し、複合語を連結。1文字語は単独検索から除外する。" },
             { title: "DB バッチ参照", body: "ユニークな語をまとめて DB に問い合わせ。ヒットした語は <code>source: \"db\"</code> で<strong>先に</strong>返す。" },
             { title: "ミス分を Gemini へ", body: "DB に無かった語だけをグループに分け、プロンプト単位で語義を生成する。" },
@@ -32,7 +32,7 @@ const page: DetailPage = {
           type: "callout",
           variant: "tip",
           content:
-            "DB ヒットを待たずに先頭で yield するのが肝。多くの語は既知なので、ユーザーは「重い LLM 生成」を待つことなく、最初のバブルをすぐ見られる。",
+            "DB ヒット分を先頭で yield するのが肝。既知語がある場合、ユーザーは重い LLM 生成を待たずに、最初のバブルを見られる。",
         },
       ],
     },
@@ -77,14 +77,14 @@ const page: DetailPage = {
         {
           type: "text",
           content:
-            "<p>未知語は <strong>Gemini</strong>（REST、既定 <code>gemini-1.5-flash</code>）に語義生成を依頼する。語は <code>group_size</code> 個ずつまとめて1プロンプトにし、各語につき最大 <code>generate_max_sense</code> 個の意味を JSON で返させる。プロンプトは「文脈を使わず一般的な意味を」「確信できない語・誤記・造語は空配列に」と明示し、ハルシネーションを抑える。</p>",
+            "<p>未知語は <strong>Gemini</strong>（REST、既定 <code>gemini-1.5-flash</code>）に意味候補生成を依頼する。語は <code>group_size</code> 個ずつまとめて1プロンプトにし、各語につき最大 <code>generate_max_sense</code> 個の意味を JSON で返させる。モデル、timeout、group size、生成数は環境変数で調整できる。</p>",
         },
         {
           type: "specs",
           items: [
             { term: "モデル", value: "<code>gemini-1.5-flash</code>（環境変数で差し替え可）" },
             { term: "group_size", value: "1プロンプトの語数 — 既定 <code>10</code>" },
-            { term: "generate_max_sense", value: "1語あたりの語義数 — 既定 <code>1〜3</code>" },
+            { term: "generate_max_sense", value: "1語あたりの意味候補数 — 既定 <code>3</code>" },
             { term: "出力形式", value: "語をキーにした JSON object（意味の配列）" },
             { term: "並列実行", value: "プロンプト群を <code>asyncio</code> で並行呼び出し" },
           ],
@@ -110,12 +110,12 @@ const page: DetailPage = {
     },
     {
       id: "fallback",
-      heading: "壊れない辞書 ── 段階的な劣化",
+      heading: "失敗時の扱い",
       blocks: [
         {
           type: "text",
           content:
-            "<p>辞書 API もバックエンド全体の思想（graceful degradation）を踏襲する。DB が落ちていても、Gemini が応答しなくても、<strong>取れた分だけを返して止まらない</strong>。各段は失敗をログに残しつつ空や部分結果へフォールバックする。</p>",
+            "<p>SSE 版の辞書 API は、失敗した外部処理をできるだけ局所化する。DB が使えなければ DB 検索をスキップし、LLM の一部プロンプトが失敗した場合はログに残して他のプロンプトを継続する。すべての外部依存が落ちても常に完全な結果を返せる、という意味ではなく、<strong>取れた分を先に返す</strong>ための設計だ。</p>",
         },
         {
           type: "table",
@@ -125,7 +125,7 @@ const page: DetailPage = {
             ["DB 利用不可", "DB 検索をスキップし、全語を LLM 生成に回す"],
             ["DB 検索が例外", "空リストにフォールバックし、ミス扱いで LLM へ"],
             ["LLM プロンプト失敗", "そのプロンプトだけ捨て、他の語の結果は返す"],
-            ["embedding 失敗", "空ベクトルを返し、best-sense は先頭語義へ縮退"],
+            ["embedding 失敗", "空ベクトルを返し、その後のスコア計算で扱える範囲に縮退"],
             ["DB 保存失敗", "ログに残して継続（生成結果の返却は完了済み）"],
           ],
         },
