@@ -4,11 +4,71 @@ const page: DetailPage = {
   slug: "scoring-algorithm",
   title: "用語スコアリングアルゴリズム",
   description:
-    "バブルの大きさを決める「重要度スコア」は、出現回数の素点に、テーマ類似とレア度（IDF）のバフを足して作る。現行 API では IDF とテーマ類似を独立した加点として返し、テーマ EMA は既定オフの機能として用意している。",
+    "スコア計算では、リクエストテキストと出現単語・語義のベクトル類似度を使い、文脈に沿った単語へ高いスコアを与える。IT 用語で文脈ベクトルを補正する工夫と、重要度の明確な基底値を置く難しさを整理する。",
   intro:
-    "「どの語を大きく表示するか」は、このアプリの体験そのものを左右する。多く出た語が常に重要とは限らないし、珍しすぎる語ばかり目立っても困る。そこで素点＋バフという<strong>加算合成</strong>で、複数の観点を1つのスコアにまとめている。",
-  tags: ["IDF", "EMA", "コサイン類似度"],
+    "「どの語を大きく表示するか」は、このアプリの体験そのものを左右する。ただ、重要度には正解ラベルがない。そこで現行実装では、まず<strong>入力テキストと語義ベクトルの近さ</strong>を中心に置き、文脈に合う単語を優先して表示する方向へ寄せている。",
+  tags: ["スコア", "文脈ベクトル", "コサイン類似度"],
   sections: [
+    {
+      id: "context-similarity",
+      heading: "文脈に沿った単語へスコアを付ける",
+      blocks: [
+        {
+          type: "lead",
+          content:
+            "辞書 SSE のスコアでは、リクエストテキストのベクトルと、DB または Gemini から得た語義ベクトルの類似度を使う。単語そのものではなく、今の文脈に合う意味を持つ単語を高く評価するためだ。",
+        },
+        {
+          type: "code",
+          code: {
+            lang: "Python",
+            title: "辞書 SSE のスコア接続",
+            code: `async for term_infos, text_vector, source in refer_dictionary_stream(text):
+    score_results = compute_term_score_by_term_info(
+        term_infos=term_infos,
+        text_vector=text_vector,
+    )
+    # term / description / score / source を SSE で返す`,
+          },
+        },
+        {
+          type: "callout",
+          variant: "info",
+          content:
+            "現状の課題は、スコアの基底となる絶対的な正解値を置きにくいこと。会話中の重要語は文脈・用途・表示密度に左右されるため、まずはベクトル類似度を中心に、調整可能な形で設計している。",
+        },
+      ],
+    },
+    {
+      id: "embedding-bias",
+      heading: "IT 用語で文脈ベクトルを補正する",
+      blocks: [
+        {
+          type: "text",
+          content:
+            "<p>スコア計算では、入力テキストの embedding が基準になる。ただし短い発話だけでは文脈が薄く、一般語に寄りすぎることがある。そこで辞書参照 v1 では、スコア計算用の embedding テキストにだけ IT 用語などのドメイン語を混ぜる <code>REFER_DICTIONARY_V1_EMBEDDING_BIAS_TEXT</code> / <code>REFER_DICTIONARY_V1_EMBEDDING_BIAS_REPEAT</code> を用意している。</p>",
+        },
+        {
+          type: "code",
+          code: {
+            lang: "Python",
+            title: "embedding 用テキストの補正イメージ",
+            code: `embedding_text = f"""{text}
+
+関連ドメイン語:
+{bias_text}
+{bias_text}
+"""`,
+          },
+        },
+        {
+          type: "callout",
+          variant: "note",
+          content:
+            "元の入力テキストは形態素解析や辞書検索にそのまま使い、embedding にだけバイアスを加える。検索対象そのものを書き換えず、スコアの基準だけをドメイン寄りに調整するための仕組みだ。",
+        },
+      ],
+    },
     {
       id: "shape",
       heading: "スコアの形 ── 素点 + バフ",
@@ -16,7 +76,7 @@ const page: DetailPage = {
         {
           type: "lead",
           content:
-            "最終スコアは「素点（base）」に複数の「バフ（buffs）」を足し、下限 0 でクリップした値。デバフの枠も用意されているが、現行の用語スコアでは加点のみを使う。",
+            "HTTP の用語スコア API では、最終スコアを「素点（base）」に複数の「バフ（buffs）」を足して作る。辞書 SSE の類似度スコアとは入口が異なるが、どちらも内訳を説明しやすい形を意識している。",
         },
         {
           type: "code",
@@ -139,38 +199,8 @@ theme'  = l2_normalize(blended)
       ],
     },
     {
-      id: "dictionary-sse-score",
-      heading: "辞書 SSE でのスコア計算",
-      blocks: [
-        {
-          type: "text",
-          content:
-            "<p><code>/analysis/refer_dictionary_get_scores</code> の SSE では、DB または Gemini から得た語義候補と入力テキストの embedding を使って、返却用のスコアを計算する。複数語義の best-sense 選択は将来拡張の余地として関数・データ構造を持っているが、現行の説明では「語義候補と文脈ベクトルの類似度をスコアへ反映する」と捉えるのが正確だ。</p>",
-        },
-        {
-          type: "code",
-          code: {
-            lang: "Python",
-            title: "辞書 SSE の接続イメージ",
-            code: `async for term_infos, text_vector, source in refer_dictionary_stream(text):
-    score_results = compute_term_score_by_term_info(
-        term_infos=term_infos,
-        text_vector=text_vector,
-    )
-    yield {"term": term, "description": description, "score": score, "source": source}`,
-          },
-        },
-        {
-          type: "callout",
-          variant: "info",
-          content:
-            "HTTP の <code>/analysis/score/terms</code> は、クライアントから渡された <code>term_vector</code> とサーバ側の IDF / テーマ状態を使う。一方、辞書 SSE は DB / Gemini から得た語義 embedding と入力文 embedding を使って、返却用のスコア付き結果を組み立てる。",
-        },
-      ],
-    },
-    {
       id: "summary",
-      heading: "まとめ：観点を足し算で束ねる",
+      heading: "まとめ：明確な指標が難しい領域を調整可能にする",
       blocks: [
         {
           type: "stats",
@@ -184,7 +214,7 @@ theme'  = l2_normalize(blended)
         {
           type: "text",
           content:
-            "<p>掛け算で観点を絡めると一つの要素が暴れたとき全体が壊れる。<strong>加算合成</strong>なら各観点の寄与が独立し、内訳をそのまま説明に使える。出現回数・話題への近さ・珍しさという異質な3軸を、素直な足し算で1つの重要度へまとめている。</p>",
+            "<p>重要語スコアには、唯一の正解が置きにくい。そこで、辞書 SSE では文脈ベクトルとの類似度を中心にし、HTTP のスコア API では base / buffs の内訳を返す。どちらも、後から調整しやすく、なぜその語が出たのかを説明しやすい形にしている。</p>",
         },
       ],
     },

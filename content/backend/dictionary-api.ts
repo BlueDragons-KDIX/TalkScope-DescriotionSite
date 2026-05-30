@@ -2,13 +2,52 @@ import type { DetailPage } from "@/content/types";
 
 const page: DetailPage = {
   slug: "dictionary-api",
-  title: "辞書 API ── DB 先行 × Gemini 補完 × SSE",
+  title: "レイテンシ改善 ── DB 先行 × Gemini 補完 × SSE",
   description:
-    "抽出した語の意味をどう返すか。まず DB をバッチで引き、ヒットしなかった語だけ Gemini に意味候補生成を依頼する。生成結果はその場でベクトル化し、SSE でプロンプト完了ごとに逐次返す。DB は速く、LLM は重いという非対称を素直に設計へ落とし込んだ辞書パイプラインを追う。",
+    "バックエンドで最も意識したのは、重い処理をどう待たせないかだ。DB と Gemini はバッチ化してリクエスト数を減らし、DB ヒットとミスを分離し、SSE で準備できた結果から返す。非同期並列で I/O 待ちの間に別タスクを進め、UX 上の待ち時間を短くするための設計を追う。",
   intro:
-    "辞書参照は「速さ」と「網羅性」の綱引きだ。DB にある語は一瞬で返せるが、未知語は LLM で生成するしかなく時間がかかる。そこで<strong>速い答えは即返し、重い生成は待たせない</strong>よう、ストリーミングで段階的に結果を届ける設計にした。",
-  tags: ["Gemini", "SSE", "辞書"],
+    "辞書参照は、TalkScope の中でもレイテンシが出やすい処理だ。DB、embedding、Gemini という I/O の多い処理が並ぶため、単純に全部終わるまで待つと体験が重くなる。そこで<strong>返せるものを先に返し、待ち時間の裏で次の処理を進める</strong>ことを軸に設計した。",
+  tags: ["レイテンシ", "SSE", "Gemini"],
   sections: [
+    {
+      id: "latency-strategy",
+      heading: "レイテンシ軽減の方針",
+      blocks: [
+        {
+          type: "lead",
+          content:
+            "速くするために計算を雑にするのではなく、待たせ方を変える。リクエスト数を減らし、I/O を並列化し、準備できた結果から UI に流すことで、ユーザーが感じる待ち時間を短くした。",
+        },
+        {
+          type: "cards",
+          items: [
+            { title: "バッチ化", tag: "DB / Gemini", body: "DB はまとめて参照し、Gemini も複数語を1プロンプトに束ねる。リクエスト数を減らし、サーバ負荷と失敗点を抑える。" },
+            { title: "SSE", tag: "UX", body: "全処理完了を待たず、DB ヒットや Gemini の完了済みプロンプトから順に返す。" },
+            { title: "非同期並列", tag: "I/O", body: "embedding、DB 参照、Gemini 呼び出しを待つ間に別の処理を進め、I/O 待ちを空白時間にしない。" },
+          ],
+        },
+        {
+          type: "table",
+          caption: "レイテンシ対策と狙い",
+          head: ["対策", "狙い"],
+          rows: [
+            ["DB バッチ参照", "単語ごとの DB 往復を避け、クエリ回数を削減する"],
+            ["Gemini プロンプト分割", "複数語をまとめて投げ、完了したプロンプトから返す"],
+            ["DB hit / miss の分離", "速い結果と重い生成処理を同じ待ち行列に入れない"],
+            ["SSE", "準備できた結果から逐次返し、初回表示までの体感時間を短くする"],
+            ["Gemini timeout", "外部 API の遅延でリクエスト全体が固まり続けるのを防ぐ"],
+            ["リージョン近接", "Cloud Run と DB の配置を近づけ、ネットワーク RTT を抑える"],
+          ],
+        },
+        {
+          type: "callout",
+          variant: "info",
+          title: "リージョン近接",
+          content:
+            "DB と GCP 側の実行環境を地理的に近いリージョンへ寄せる考え方。英語では <code>region affinity</code> や <code>regional colocation</code> と呼ばれる文脈に近く、API 最適化だけでは消せないネットワーク往復時間を抑える狙いがある。",
+        },
+      ],
+    },
     {
       id: "flow",
       heading: "DB 先行・LLM 補完の流れ",
@@ -32,7 +71,7 @@ const page: DetailPage = {
           type: "callout",
           variant: "tip",
           content:
-            "DB ヒット分を先頭で yield するのが肝。既知語がある場合、ユーザーは重い LLM 生成を待たずに、最初のバブルを見られる。",
+            "DB ヒット分を先頭で yield するのが肝。既知語がある場合、ユーザーは Gemini の生成を待たずに、最初のバブルを見られる。",
         },
       ],
     },
@@ -43,7 +82,7 @@ const page: DetailPage = {
         {
           type: "text",
           content:
-            "<p>辞書参照は <code>AsyncGenerator</code> として実装され、結果を Server-Sent Events で逐次配信する。DB ヒット分が1イベント、その後 LLM のプロンプトが1つ完了するたびに1イベント、という粒度で流れる。LLM 呼び出しは <code>asyncio.as_completed</code> で待ち受け、<strong>速く返ったプロンプトから順に</strong>届ける。</p>",
+            "<p>辞書参照は <code>AsyncGenerator</code> として実装され、結果を Server-Sent Events で逐次配信する。DB ヒット分が1イベント、その後 Gemini のプロンプトが1つ完了するたびに1イベント、という粒度で流れる。LLM 呼び出しは <code>asyncio.as_completed</code> で待ち受け、<strong>速く返ったプロンプトから順に</strong>届ける。</p>",
         },
         {
           type: "code",
@@ -65,19 +104,19 @@ const page: DetailPage = {
           items: [
             { title: "source フィールド", body: "その語義が DB 由来（<code>db</code>）か LLM 生成（<code>llm</code>）かを明示する。" },
             { title: "プロンプト粒度", body: "1プロンプト分の語義が揃った時点で embedding まで済ませ、即 yield する。" },
-            { title: "失敗は握りつぶさない", body: "あるプロンプトの生成が失敗してもログに残して継続し、他の語を巻き添えにしない。" },
+            { title: "タイムアウト", body: "Gemini API には timeout を設定し、外部 API 待ちでストリーム全体が止まり続けるのを防ぐ。" },
           ],
         },
       ],
     },
     {
       id: "gemini",
-      heading: "Gemini への語義生成依頼",
+      heading: "Gemini と DB のバッチ処理",
       blocks: [
         {
           type: "text",
           content:
-            "<p>未知語は <strong>Gemini</strong>（REST、既定 <code>gemini-1.5-flash</code>）に意味候補生成を依頼する。語は <code>group_size</code> 個ずつまとめて1プロンプトにし、各語につき最大 <code>generate_max_sense</code> 個の意味を JSON で返させる。モデル、timeout、group size、生成数は環境変数で調整できる。</p>",
+            "<p>未知語は <strong>Gemini</strong>（REST、既定 <code>gemini-1.5-flash</code>）に意味候補生成を依頼する。語は <code>group_size</code> 個ずつまとめて1プロンプトにし、各語につき最大 <code>generate_max_sense</code> 個の意味を JSON で返させる。DB も Gemini も単語ごとに細かく叩かず、まとまりで処理することで、リクエスト数と失敗点を減らしている。</p>",
         },
         {
           type: "specs",
@@ -104,7 +143,7 @@ const page: DetailPage = {
           type: "callout",
           variant: "info",
           content:
-            "「入力された単語を完全一致のキーに」「入力外の単語は足さない」と制約することで、後段のベクトル化・DB 保存が語をそのまま突き合わせられる。出力スキーマを固定することが、パイプラインの安定の前提になる。",
+            "バッチ化は単に速くするためだけではない。外部 API へのリクエスト数が減るほど、レート制限・ネットワークエラー・サーバ負荷の影響も小さくなる。",
         },
       ],
     },
