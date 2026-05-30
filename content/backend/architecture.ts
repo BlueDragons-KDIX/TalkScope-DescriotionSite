@@ -2,12 +2,12 @@ import type { DetailPage } from "@/content/types";
 
 const page: DetailPage = {
   slug: "architecture",
-  title: "バックエンド全体設計と「壊れない NLP」",
+  title: "バックエンド全体設計",
   description:
-    "TalkScope のバックエンドは FastAPI で書かれ、endpoints / services / crud にきれいに分かれている。だが本当の肝は構成図ではなく、Sudachi → spaCy → ハッシュへと段階的に劣化するフォールバック設計だ。外部依存が欠けても必ず応答を返す堅牢性をどう作ったかを解説する。",
+    "TalkScope のバックエンドは FastAPI で書かれ、endpoints / services / crud に分かれている。DB 接続や外部 API に依存する処理を分離し、DB が使えない環境でも解析系 API を起動できるようにした構成を解説する。",
   intro:
-    "NLP ライブラリは重く、環境に敏感だ。GiNZA のモデルが入っていない、Gemini が落ちている——展示当日にそれが起きても、アプリは止められない。そこでバックエンドは「<strong>最良を試し、駄目なら劣化して必ず返す</strong>」を全段で徹底した。",
-  tags: ["FastAPI", "アーキテクチャ", "フォールバック"],
+    "TalkScope のバックエンドは、文字起こしされたテキストを受け取り、用語抽出・辞書参照・スコア計算を担う。設計の中心は、HTTP の入口を薄く保ち、解析・LLM・DB 操作をそれぞれ独立した層に置くことだ。",
+  tags: ["FastAPI", "アーキテクチャ", "DB"],
   sections: [
     {
       id: "layers",
@@ -35,7 +35,7 @@ const page: DetailPage = {
             "│   └─ llm/gemini.py           Gemini REST クライアント",
             "├─ crud/                  DB 読み書き",
             "├─ models/ schemas/       SQLAlchemy モデル / Pydantic スキーマ",
-            "└─ core/database.py       DB 接続（pgvector）",
+            "└─ core/database.py       DB 接続と利用可否の管理",
           ],
         },
         {
@@ -45,38 +45,38 @@ const page: DetailPage = {
             { term: "言語 / 管理", value: "Python 3.10+ / uv" },
             { term: "形態素解析", value: "SudachiPy（+ sudachidict-core）" },
             { term: "ベクトル / 係り受け", value: "spaCy + GiNZA（ja-ginza）" },
-            { term: "ベクトル DB", value: "pgvector + SQLAlchemy" },
+            { term: "DB", value: "SQLAlchemy（辞書・IDF テーブル）" },
             { term: "語義生成", value: "Gemini API（REST）" },
           ],
         },
       ],
     },
     {
-      id: "fallback",
-      heading: "多段フォールバックという思想",
+      id: "availability",
+      heading: "DB に依存しすぎない起動設計",
       blocks: [
         {
           type: "text",
           content:
-            "<p>このバックエンドを貫く設計思想は <strong>graceful degradation（優雅な劣化）</strong>だ。各解析ステップは「理想の実装」と「それが使えないときの代替」を必ずペアで持つ。代替は精度こそ落ちるが、決して例外で止まらない。</p>",
+            "<p>バックエンドは DB を使う機能を持つが、DB が未設定のときにアプリ全体を落とさない。<code>core/database.py</code> は接続文字列が無い場合に DB 機能を無効化し、<code>db.is_available</code> を見て辞書系の処理だけを切り替える。</p>",
         },
         {
           type: "table",
-          caption: "各段の理想実装とフォールバック",
-          head: ["処理", "理想", "フォールバック"],
+          caption: "外部依存と現行の扱い",
+          head: ["依存", "現行の扱い"],
           rows: [
-            ["形態素解析", "Sudachi", "正規表現分割 + 品詞ヒューリスティック"],
-            ["係り受け", "spaCy / GiNZA", "ルールベースの簡易係り受け"],
-            ["単語ベクトル", "spaCy 学習済み 300次元", "SHA256 由来の決定論的ハッシュベクトル"],
-            ["語義生成", "Gemini", "DB ヒットのみで応答（生成はスキップ）"],
+            ["DB", "未設定・初期化失敗時は DB 機能を無効化し、解析 API の起動は継続する"],
+            ["Gemini", "API キー未設定や timeout は HTTP エラーとして扱い、SSE 側では失敗したプロンプトをログに残して継続する"],
+            ["spaCy / GiNZA", "モデルは遅延ロードし、利用できない場合は text_analysis 内の代替ベクトル生成へ落とす"],
+            ["IDF", "起動時に DB の term_idf を読み、無ければ JSON、どちらも無ければ IDF バフ無しで計算する"],
           ],
         },
         {
           type: "callout",
-          variant: "tip",
-          title: "なぜハッシュベクトルか",
+          variant: "info",
+          title: "DB 初期化は明示的に行う",
           content:
-            "学習済みベクトルが無くても、同じ単語からは常に同じベクトルが得られれば「一貫した類似度計算」は成立する。SHA256 をシードに正規化ベクトルを生成することで、精度を諦めつつパイプラインの形は保つ。",
+            "<code>ENABLE_DB_INIT=true</code> のときだけ起動時にテーブル作成を試みる。デプロイ環境では、接続先や初期化タイミングを環境変数で制御できるようにしている。",
         },
       ],
     },
@@ -87,20 +87,20 @@ const page: DetailPage = {
         {
           type: "text",
           content:
-            "<p>リアルタイム性が要る軽い処理（音声認識・文字起こし・描画）はフロントに、重い解析（形態素解析・係り受け・ベクトル類似度）はバックに置く。両者は HTTP / SSE の薄い境界で繋がり、<strong>NLP の精度を段階的に上げても UI は変わらない</strong>ように設計されている。</p>",
+            "<p>リアルタイム性が要る軽い処理（音声認識・文字起こし・描画）はフロントに、重い解析（形態素解析・ベクトル化・辞書参照・スコア計算）はバックに置く。両者は HTTP / SSE の境界で繋がり、<strong>結果が届いた分から UI を更新できる</strong>ようにしている。</p>",
         },
         {
           type: "cards",
           items: [
-            { icon: "🖥️", title: "フロント", tag: "Realtime", body: "Web Speech API での文字起こし、バブル描画、操作の即応性。" },
-            { icon: "⚙️", title: "バック", tag: "Compute", body: "形態素解析・ベクトル化・スコアリング・語義生成という計算の重心。" },
-            { icon: "🔌", title: "境界", tag: "API", body: "ベクトル化 API・スコアリング API・辞書参照 SSE の3系統。" },
+            { title: "フロント", tag: "Realtime", body: "Web Speech API での文字起こし、バブル描画、操作の即応性。" },
+            { title: "バック", tag: "Compute", body: "形態素解析・ベクトル化・スコアリング・語義生成という計算の重心。" },
+            { title: "境界", tag: "API", body: "ベクトル化 API・スコアリング API・辞書参照 SSE の3系統。" },
           ],
         },
         {
           type: "quote",
-          text: "ルールベースから形態素解析、そして類似度モデルへ。NLP は段階導入できる形にしておく。",
-          cite: "開発方針（AGENTS.md より）",
+          text: "API は薄く、重い処理は services に閉じ込める。",
+          cite: "バックエンド設計方針",
         },
       ],
     },

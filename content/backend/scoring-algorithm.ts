@@ -4,7 +4,7 @@ const page: DetailPage = {
   slug: "scoring-algorithm",
   title: "用語スコアリングアルゴリズム",
   description:
-    "バブルの大きさを決める「重要度スコア」は、出現回数の素点に、テーマ類似とレア度（IDF）のバフを足して作る。回数は多ければいいわけではなく中庸が最大になる放物線、テーマは会話の流れを EMA で追う1本のベクトル——加算合成という素直な設計の中身を、実際の重みとともに解く。",
+    "バブルの大きさを決める「重要度スコア」は、出現回数の素点に、テーマ類似とレア度（IDF）のバフを足して作る。現行 API では IDF とテーマ類似を独立した加点として返し、テーマ EMA は既定オフの機能として用意している。",
   intro:
     "「どの語を大きく表示するか」は、このアプリの体験そのものを左右する。多く出た語が常に重要とは限らないし、珍しすぎる語ばかり目立っても困る。そこで素点＋バフという<strong>加算合成</strong>で、複数の観点を1つのスコアにまとめている。",
   tags: ["IDF", "EMA", "コサイン類似度"],
@@ -66,7 +66,7 @@ weight = 4 * x * (1 - x)    # 中点 x=0.5（count=50）で最大 1.0
           type: "callout",
           variant: "tip",
           content:
-            "「たくさん言われた語ほど重要」と素朴に重み付けると、相槌や接続的な語が肥大する。山型の重みは“ちょうどよく繰り返された語”を一番大きく見せ、画面の主役を適切に選ぶ。",
+            "この素点は <code>occurrence_count</code> が送られたときだけ使う。省略された場合は <code>base=0</code> になり、IDF やテーマ類似などのバフだけで final を作る。",
         },
       ],
     },
@@ -139,33 +139,32 @@ theme'  = l2_normalize(blended)
       ],
     },
     {
-      id: "best-sense",
-      heading: "文脈に合う語義を選ぶ（best-sense）",
+      id: "dictionary-sse-score",
+      heading: "辞書 SSE でのスコア計算",
       blocks: [
         {
           type: "text",
           content:
-            "<p>1つの語が複数の語義を持つとき、どれを採用するか。答えは<strong>文脈ベクトルとの類似度</strong>だ。各語義の説明文を事前にベクトル化しておき、入力テキストのベクトルとのコサイン類似度が最大になる語義を選ぶ。「最も今の話に近い意味」を機械的に選び取る仕組みだ。</p>",
+            "<p><code>/analysis/refer_dictionary_get_scores</code> の SSE では、DB または Gemini から得た語義候補と入力テキストの embedding を使って、返却用のスコアを計算する。複数語義の best-sense 選択は将来拡張の余地として関数・データ構造を持っているが、現行の説明では「語義候補と文脈ベクトルの類似度をスコアへ反映する」と捉えるのが正確だ。</p>",
         },
         {
           type: "code",
           code: {
             lang: "Python",
-            title: "best-sense 選択（term_score.py）",
-            code: `best_description, best_similarity = max(
-    [(desc, cosine_similarity(emb, text_vector))
-     for desc, emb in term_info.description_embeddings],
-    key=lambda x: x[1],
-)
-score = 0.5 * linear_cosine_similarity_to_unit(best_similarity) \\
-      + 0.08 * (idf or 0.0)`,
+            title: "辞書 SSE の接続イメージ",
+            code: `async for term_infos, text_vector, source in refer_dictionary_stream(text):
+    score_results = compute_term_score_by_term_info(
+        term_infos=term_infos,
+        text_vector=text_vector,
+    )
+    yield {"term": term, "description": description, "score": score, "source": source}`,
           },
         },
         {
           type: "callout",
           variant: "info",
           content:
-            "選ばれた語義の類似度は、そのままテーマ類似バフにも流用される。「文脈に合う意味を選ぶ」処理と「その語をどれだけ大きく見せるか」が、同じコサイン類似度から導かれている。",
+            "HTTP の <code>/analysis/score/terms</code> は、クライアントから渡された <code>term_vector</code> とサーバ側の IDF / テーマ状態を使う。一方、辞書 SSE は DB / Gemini から得た語義 embedding と入力文 embedding を使って、返却用のスコア付き結果を組み立てる。",
         },
       ],
     },
