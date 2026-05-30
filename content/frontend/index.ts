@@ -50,6 +50,15 @@ export const frontendItems: DigestItem[] = [
   },
   // ── UI/UX デザイン ──
   {
+    slug: "design-philosophy",
+    title: "企画思想 ── 「置いていかれない」リアルタイムUX",
+    description:
+      "知らない単語ひとつで話に置いていかれる——その瞬間をなくすために TalkScope は生まれた。リアルタイムで「ミリでも知っている」状態を保つ初期構想から、ウィンドウ選択・動的レイアウト・詳細設定へと続く、使う人ごとに深められる4段階のUXを解説する。",
+    tags: ["企画思想", "UX", "カスタマイズ"],
+    coverImage: { src: "/frontend/window-transcription.png", alt: "リアルタイム文字起こしウィンドウ" },
+    category: "ux",
+  },
+  {
     slug: "layout-engine",
     title: "動的レイアウトエンジン",
     description:
